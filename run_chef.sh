@@ -12,9 +12,10 @@ cd $MYDIR
 # Defaults
 NO_GIT=
 RUN_ONCE=
+VERBOSE=
 
 log() {
-    echo "$0: $@"
+    [[ -n $VERBOSE ]] && echo "$0: $@"
     echo "$0: $@" >> $LOGFILE
 }
 
@@ -29,10 +30,11 @@ usage() {
     echo "    -i    -- override default interval ($INTERVAL)"
     echo "    -s    -- override default splay ($SPLAY)"
     echo "    -l    -- override the default logfile ($LOGFILE)"
+    echo "    -v    -- verbose (print stuff to STDOUT as well as logs)"
     exit 1
 }
 
-while getopts ":hnoi:s:l:" opt; do
+while getopts ":hnoi:s:l:v" opt; do
     case $opt in
         h)  usage
             ;;
@@ -45,6 +47,8 @@ while getopts ":hnoi:s:l:" opt; do
         s)  SPLAY=$OPTARG
             ;;
         l)  LOGFILE=$OPTARG
+            ;;
+        v)  VERBOSE=1
             ;;
         *)  echo "Invalid option -- '$OPTARG'"
             usage
@@ -62,7 +66,13 @@ fi
 
 while true; do
     # Update git
-    [[ -z $NO_GIT ]] && git pull 2>&1 | tee -a $LOGFILE
+    if [[ -z $NO_GIT ]]; then
+        if [[ -n $VERBOSE ]]; then
+            git pull 2>&1 | tee -a $LOGFILE
+        else
+            git pull 2>&1 >> $LOGFILE
+        fi
+    fi
     # Run chef-solo
     chef-solo -c solo.rb \
         -j nodes/$NODENAME.json \
