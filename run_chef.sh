@@ -4,6 +4,11 @@
 # Hack for when running under rvm (for testing)
 [[ -f .rvmrc ]] && . .rvmrc
 
+# Fix various paths to get chef-solo working
+export PATH=$PATH:/opt/omni/lib/ruby/gems/1.8/gems/chef-0.10.4/bin
+export GEM_PATH=/opt/omni/lib/ruby/gems/1.8
+export GEM_HOME=/opt/omni/lib/ruby/gems/1.8
+
 MYDIR=$PWD/`dirname $BASH_SOURCE[0]`
 # Defaults
 NODENAME=$(hostname)
