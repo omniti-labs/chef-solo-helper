@@ -14,4 +14,4 @@ LOGFILE=/var/log/chef/solo.log
 NODENAME=$(hostname)
 
 # Use a custom wrapper for ssh with git
-export GIT_SSH=./scripts/git-ssh-wrapper.sh
+export GIT_SSH=./resources/git-ssh-wrapper.sh
