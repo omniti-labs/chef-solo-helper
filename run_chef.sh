@@ -57,6 +57,10 @@ while getopts ":hnoi:s:l:v" opt; do
 done
 shift $(($OPTIND-1))
 
+# Make sure the log directory exists
+LOGDIR=$(dirname $LOGFILE)
+[[ -d $LOGDIR ]] || mkdir -p $LOGDIR
+
 # If we're running multiple times, then have an initial random delay
 if [[ -z $RUN_ONCE ]]; then
     DELAY=$((RANDOM % SPLAY))
