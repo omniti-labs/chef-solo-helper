@@ -19,6 +19,9 @@ SPLAY=30 # Random interval to inititally sleep to stagger chef runs
 NO_GIT=
 RUN_ONCE=
 
+# Use a custom wrapper for ssh with git
+export GIT_SSH=$MYDIR/scripts/git-ssh-wrapper.sh
+
 log() {
     echo "$0: $@"
     echo "$0: $@" >> $LOGFILE
