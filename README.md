@@ -45,6 +45,12 @@ Run chef once, updating from git first:
 By default, run_chef.sh will run continuously, running chef at regular
 intervals.
 
+There is an smf manifest in the resources directory, it looks in
+/var/chef-solo/config for run_chef.sh:
+
+    svccfg import resources/chef-manifest.xml
+    svcadm enable chef
+
 ## Changes from 'full' chef
 
  - cookbooks, roles and databags work identically to full chef, only you don't
