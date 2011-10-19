@@ -71,7 +71,7 @@ fi
 
 while true; do
     # Update git
-    [[ -z $NO_GIT ]] && git pull
+    [[ -z $NO_GIT ]] && git pull 2>&1 | tee -a $LOGFILE
     # Run chef-solo
     chef-solo -c $MYDIR/solo.rb \
         -j $MYDIR/nodes/$NODENAME.json \
