@@ -4,9 +4,10 @@
 # Hack for when running under rvm (for testing)
 [[ -f .rvmrc ]] && . .rvmrc
 
-MYDIR=$PWD/`dirname $BASH_SOURCE[0]`
+MYDIR=$(dirname $BASH_SOURCE[0])
+cd $MYDIR
 
-[[ -f $MYDIR/config.sh ]] && . $MYDIR/config.sh
+[[ -f config.sh ]] && . config.sh
 
 # Defaults
 NO_GIT=
@@ -63,8 +64,8 @@ while true; do
     # Update git
     [[ -z $NO_GIT ]] && git pull 2>&1 | tee -a $LOGFILE
     # Run chef-solo
-    chef-solo -c $MYDIR/solo.rb \
-        -j $MYDIR/nodes/$NODENAME.json \
+    chef-solo -c solo.rb \
+        -j nodes/$NODENAME.json \
         -N $NODENAME \
         -L $LOGFILE
     # Quit if we're only running once
