@@ -78,7 +78,7 @@ while true; do
         -N $NODENAME \
         -L $LOGFILE
     # Quit if we're only running once
-    [[ -n $RUN_ONCE ]] || exit
+    [[ -n $RUN_ONCE ]] && exit
     # Otherwise, wait and do it all over
     log "Sleeping for $INTERVAL seconds..."
     sleep $INTERVAL
