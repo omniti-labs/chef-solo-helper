@@ -4,23 +4,13 @@
 # Hack for when running under rvm (for testing)
 [[ -f .rvmrc ]] && . .rvmrc
 
-# Fix various paths to get chef-solo working
-export PATH=$PATH:/opt/omni/lib/ruby/gems/1.8/gems/chef-0.10.4/bin
-export GEM_PATH=/opt/omni/lib/ruby/gems/1.8
-export GEM_HOME=/opt/omni/lib/ruby/gems/1.8
-
 MYDIR=$PWD/`dirname $BASH_SOURCE[0]`
+
+[[ -f $MYDIR/config.sh ]] && . $MYDIR/config.sh
+
 # Defaults
-NODENAME=$(hostname)
-#LOGFILE=/var/log/chef/solo.log
-LOGFILE=$PWD/chef-solo.log
-INTERVAL=10
-SPLAY=30 # Random interval to inititally sleep to stagger chef runs
 NO_GIT=
 RUN_ONCE=
-
-# Use a custom wrapper for ssh with git
-export GIT_SSH=$MYDIR/scripts/git-ssh-wrapper.sh
 
 log() {
     echo "$0: $@"
