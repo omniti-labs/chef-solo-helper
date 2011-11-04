@@ -1,4 +1,8 @@
-# Chef
+# Chef scripts
+
+This repository contains scripts for running chef in a serverless
+environment with one or more git repositories containing the chef
+configuration.
 
 ## Installation instructions
 
@@ -12,15 +16,39 @@ you're storing the chef repository, and put it in /root/.ssh/id_rsa_chef:
     sudo cp id_rsa_chef /root/.ssh/
     sudo chmod 600 /root/.ssh/id_rsa_chef
 
-### Chef repository
+### Repositories
 
-Check out the chef repository to `/var/chef-solo/config/`:
+In general, there are 3 repositories for each chef installation:
+
+ * Scripts to run chef
+ * A project specific repository (this is the main chef configuration)
+ * A common/shared repository for cookbooks common to all installations
+
+All of these go under /var/chef-solo in the scripts, config and common
+directories respectively.
+
+#### Chef scripts repository
+
+Check out the scripts repository to `/var/chef-solo/scripts/`:
 
     sudo mkdir /var/chef-solo
     cd
+    git clone src@src.omniti.com:~internal/chef/scripts
+    sudo mv scripts /var/chef-solo/scripts
+
+#### Project specific repository
+
+Check out the project specific chef repository to `/var/chef-solo/config/`:
+
     git clone src@src.omniti.com:~systems/chef/myrepo
     sudo mv myrepo /var/chef-solo/config
 
+### Common cookbooks repository
+
+Check out the common chef repository to `/var/chef-solo/common/`:
+
+    git clone src@src.omniti.com:~internal/chef/common
+    sudo mv common /var/chef-solo/common
 
 ## Running chef
 
@@ -39,6 +67,10 @@ Run chef once, without updating from git first:
 Run chef once, updating from git first:
 
     sudo ./run_chef.sh -o
+
+Run chef once, don't update from git, and print out lots of debug information:
+
+    sudo ./run_chef.sh -ondv
 
 ### Running as a daemon
 
