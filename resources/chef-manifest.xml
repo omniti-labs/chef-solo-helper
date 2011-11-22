@@ -15,7 +15,7 @@
         <method_context>
         </method_context>
         <exec_method type="method" name="start"
-            exec="/var/chef-solo/config/run_chef.sh" timeout_seconds="60"/>
+            exec="/var/chef-solo/scripts/run_chef.sh" timeout_seconds="60"/>
         <exec_method type="method" name="stop" exec=":kill"
             timeout_seconds="60"/>
         <property_group name="startd" type="framework">
@@ -24,7 +24,7 @@
         </property_group>
         <property_group name="application" type="application">
             <propval name="config_file" type="astring"
-                value="/var/chef-solo/config/run_chef.sh"/>
+                value="/var/chef-solo/scripts/run_chef.sh"/>
         </property_group>
         <stability value="Evolving"/>
         <template>
