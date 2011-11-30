@@ -5,4 +5,4 @@
 # This requires that the key be present in the hosts file already. Use:
 #       ssh-keyscan [hostname] >> /root/.ssh/known_hosts
 ##############################################################################
-ssh -i /root/.ssh/id_rsa_chef "$@"
+ssh -i /var/chef-solo/chef.pem "$@"
