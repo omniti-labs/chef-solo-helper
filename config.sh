@@ -13,5 +13,9 @@ SPLAY=120 # Random interval to inititally sleep to stagger chef runs
 LOGFILE=/var/log/chef/solo.log
 NODENAME=$(hostname)
 
+CHEF_ROOT="/var/chef-solo"
+# Path to node configs
+NODEPATH="$CHEF_ROOT/config/nodes"
+
 # Use a custom wrapper for ssh with git
 export GIT_SSH=./resources/git-ssh-wrapper.sh

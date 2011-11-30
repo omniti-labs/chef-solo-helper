@@ -79,7 +79,7 @@ while true; do
     fi
     # Run chef-solo
     chef-solo -c solo.rb \
-        -j /var/chef-solo/config/nodes/$NODENAME.json \
+        -j $NODEPATH/$NODENAME.json \
         -N $NODENAME \
         -L $LOGFILE
     # Quit if we're only running once
