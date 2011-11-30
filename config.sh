@@ -20,4 +20,4 @@ REPOS="$CHEF_ROOT/scripts $CHEF_ROOT/config $CHEF_ROOT/common"
 NODEPATH="$CHEF_ROOT/config/nodes"
 
 # Use a custom wrapper for ssh with git
-export GIT_SSH=./resources/git-ssh-wrapper.sh
+export GIT_SSH=$CHEF_ROOT/scripts/resources/git-ssh-wrapper.sh
