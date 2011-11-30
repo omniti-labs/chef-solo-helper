@@ -14,6 +14,8 @@ LOGFILE=/var/log/chef/solo.log
 NODENAME=$(hostname)
 
 CHEF_ROOT="/var/chef-solo"
+# Which repositories to update with git
+REPOS="$CHEF_ROOT/scripts $CHEF_ROOT/config $CHEF_ROOT/common"
 # Path to node configs
 NODEPATH="$CHEF_ROOT/config/nodes"
 

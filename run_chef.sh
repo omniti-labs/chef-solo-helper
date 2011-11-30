@@ -71,11 +71,17 @@ fi
 while true; do
     # Update git
     if [[ -z $NO_GIT ]]; then
-        if [[ -n $VERBOSE ]]; then
-            git pull 2>&1 | tee -a $LOGFILE
-        else
-            git pull 2>&1 >> $LOGFILE
-        fi
+        for r in $REPOS; do
+            if [[ -d $r ]]; then
+                pushd $r > /dev/null
+                if [[ -n $VERBOSE ]]; then
+                    git pull 2>&1 | tee -a $LOGFILE
+                else
+                    git pull 2>&1 >> $LOGFILE
+                fi
+                popd > /dev/null
+            fi
+        done
     fi
     # Run chef-solo
     chef-solo -c solo.rb \
