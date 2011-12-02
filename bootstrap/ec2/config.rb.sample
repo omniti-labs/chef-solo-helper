@@ -1,0 +1,6 @@
+# EC2 access keys
+aws_access_key_id     "ABCDEFGHIJKLMNOPQRST"
+aws_secret_access_key "abC0DEfghI2JklM4nopQRSTUVWXYZ12345678901"
+
+# EC2 ssh key
+aws_ssh_key_name      "your_key_name"

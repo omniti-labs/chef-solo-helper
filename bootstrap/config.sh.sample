@@ -1,0 +1,36 @@
+##############################################################################
+# Configuration for the bootstrap scripts
+##############################################################################
+
+#############################
+# Remote host configuration #
+#############################
+
+# Name of the key used to access the git server
+KEY="chef.key"
+# The path where the bootstrap files end up on the remote server
+BOOTSTRAP_PATH="/tmp/chef"
+# The path where all chef information is stored on the remote server
+CHEF_ROOT="/var/chef-solo"
+# The username to connect to the remote host as
+USERNAME="ubuntu"
+# The name of the bootstrap script to copy over
+BOOTSTRAP_SCRIPT="bootstrap.sh"
+
+# Location of the ssh key you use to connect to the server. Leave blank if you
+# are using the default key or the key is loaded into your ssh agent already.
+#SSH_KEY="$HOME/.ssh/ec2.asc"
+
+############################
+# Repository configuration #
+############################
+
+# Where the chef scripts are stored
+SCRIPTS_REPO="git@git.example.com:chef-scripts.git"
+# Where the main configuration is stored
+CONFIG_REPO="git@git.example.com:chef.git"
+# For cookbooks common to multiple repositories
+COMMON_REPO=""
+
+# Hostname for the git server (to add to the known hosts file)
+GIT_HOST="git.example.com"
