@@ -46,6 +46,13 @@ NO_GIT=
 RUN_ONCE=
 VERBOSE=
 
+rotate_logs() {
+    for ((i=4; $i>0; i--)); do
+        [[ -f $LOGFILE.$i ]] && mv $LOGFILE.$i $LOGFILE.$((i+1))
+    done
+    [[ -f $LOGFILE ]] && mv $LOGFILE $LOGFILE.1
+}
+
 log() {
     [[ -n $VERBOSE ]] && echo "$0: $@"
     echo "$0: $@" >> $LOGFILE
@@ -92,6 +99,8 @@ shift $(($OPTIND-1))
 # Make sure the log directory exists
 LOGDIR=$(dirname $LOGFILE)
 [[ -d $LOGDIR ]] || mkdir -p $LOGDIR
+
+rotate_logs
 
 # If we're running multiple times, then have an initial random delay
 if [[ -z $RUN_ONCE ]]; then
