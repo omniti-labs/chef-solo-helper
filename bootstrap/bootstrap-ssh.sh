@@ -4,12 +4,10 @@
 . $(dirname $0)/config.sh
 
 HOST=$1
-NODENAME=$2
-
 # Allow specifying the hostname on the command line - this is used to
 # temporarily set the hostname on the system so that chef knows what node name
 # to use
-[[ -z $NODENAME ]] && NODENAME=${HOST%%.*}
+NODENAME=$2
 
 # Utility functions
 msg() { echo " * $@"; }
@@ -31,8 +29,10 @@ safe scp $SSH_OPTS $BOOTSTRAP_SCRIPT $USERNAME@$HOST:$BOOTSTRAP_PATH
 msg "Copying configuration"
 safe scp $SSH_OPTS config.sh $USERNAME@$HOST:$BOOTSTRAP_PATH
 
-msg "Setting hostname on the server"
-safe ssh $SSH_OPTS $USERNAME@$HOST sudo hostname $NODENAME
+if [[ -n $NODENAME ]]; then
+    msg "Setting hostname on the server"
+    safe ssh $SSH_OPTS $USERNAME@$HOST sudo hostname $NODENAME
+fi
 
 msg "Running bootstrap script on $HOST as root"
 safe ssh $SSH_OPTS $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
