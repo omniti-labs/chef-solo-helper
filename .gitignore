@@ -1,3 +1,4 @@
 .rvmrc
 chef-solo.log
+config.sh
 *.swp

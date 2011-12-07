@@ -39,6 +39,23 @@
 MYDIR=$(dirname $BASH_SOURCE[0])
 cd $MYDIR
 
+INTERVAL=1800
+SPLAY=120 # Random interval to inititally sleep to stagger chef runs
+LOGFILE=/var/log/chef/solo.log
+NODENAME=$(hostname)
+
+CHEF_ROOT="/var/chef-solo"
+# Which repositories to update with git
+REPOS="$CHEF_ROOT/scripts $CHEF_ROOT/config $CHEF_ROOT/common"
+# Path to node configs
+NODEPATH="$CHEF_ROOT/config/nodes"
+
+# Use a custom wrapper for ssh with git
+export GIT_SSH=$CHEF_ROOT/scripts/resources/git-ssh-wrapper.sh
+
+# Config.sh isn't kept in version control and can be created to override any
+# values set above as needed. This file may also be created by bootstrap
+# scripts.
 [[ -f config.sh ]] && . config.sh
 
 # Defaults
