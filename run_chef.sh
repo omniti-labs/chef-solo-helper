@@ -64,7 +64,8 @@ RUN_ONCE=
 VERBOSE=
 
 rotate_logs() {
-    for ((i=4; $i>0; i--)); do
+    # Keep enough logs for a little over a day
+    for ((i=50; $i>0; i--)); do
         [[ -f $LOGFILE.$i ]] && mv $LOGFILE.$i $LOGFILE.$((i+1))
     done
     [[ -f $LOGFILE ]] && mv $LOGFILE $LOGFILE.1
