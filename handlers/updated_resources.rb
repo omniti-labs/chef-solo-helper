@@ -6,3 +6,7 @@ module SimpleReport
     end
   end
 end
+
+# Automatically enable the handler
+Chef::Config.send("report_handlers") << SimpleReport::UpdatedResources.new
+Chef::Config.send("exception_handlers") << SimpleReport::UpdatedResources.new

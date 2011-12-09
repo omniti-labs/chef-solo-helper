@@ -5,7 +5,6 @@ cookbook_path ["/var/chef-solo/common/cookbooks",
 role_path "/var/chef-solo/config/roles"
 data_bag_path "/var/chef-solo/config/data_bags"
 
-# Updated resources handler
-require "/var/chef-solo/scripts/handlers/updated_resources"
-report_handlers << SimpleReport::UpdatedResources.new
-exception_handlers << SimpleReport::UpdatedResources.new
+# Include any handlers
+Dir.glob('/var/chef-solo/scripts/handlers/*.rb') { |f| require f }
+Dir.glob('/var/chef-solo/scripts/handlers/site/*.rb') { |f| require f }
