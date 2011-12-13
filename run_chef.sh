@@ -132,16 +132,18 @@ while true; do
     if [[ -z $NO_GIT ]]; then
         for r in $REPOS; do
             if [[ -d $r ]]; then
+                log "Updating git repository $r"
                 pushd $r > /dev/null
                 if [[ -n $VERBOSE ]]; then
                     git pull 2>&1 | tee -a $LOGFILE
                 else
-                    git pull 2>&1 >> $LOGFILE
+                    git pull >> $LOGFILE 2>&1
                 fi
                 popd > /dev/null
             fi
         done
     fi
+    log "Running chef-solo"
     # Run chef-solo
     chef-solo -c solo.rb \
         -j $NODEPATH/$NODENAME.json \
