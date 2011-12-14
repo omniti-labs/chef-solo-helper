@@ -76,6 +76,11 @@ log() {
     echo "$0: $@" >> $LOGFILE
 }
 
+error() {
+    log "ERROR: $@"
+    exit 1
+}
+
 usage() {
     echo "Usage: $0 [options]"
     echo "Updates a chef repository from git, and runs chef-solo"
@@ -136,8 +141,10 @@ while true; do
                 pushd $r > /dev/null
                 if [[ -n $VERBOSE ]]; then
                     git pull 2>&1 | tee -a $LOGFILE
+                    [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
                 else
-                    git pull >> $LOGFILE 2>&1
+                    git pull >> $LOGFILE 2>&1 ||
+                        error "Failed git pull"
                 fi
                 popd > /dev/null
             fi
