@@ -43,6 +43,8 @@ INTERVAL=1800
 SPLAY=120 # Random interval to inititally sleep to stagger chef runs
 LOGFILE=/var/log/chef/solo.log
 NODENAME=$(hostname)
+# Strip off any domain name from incorrectly set hostnames
+NODENAME=${NODENAME%%.*}
 
 CHEF_ROOT="/var/chef-solo"
 # Which repositories to update with git
