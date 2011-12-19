@@ -132,7 +132,7 @@ LOGDIR=$(dirname $LOGFILE)
 rotate_logs
 
 # If we're running multiple times, then have an initial random delay
-if [[ -z $RUN_ONCE || -n $RUN_ONE_SPLAY ]]; then
+if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
     DELAY=$((RANDOM % SPLAY))
     log "Sleeping for $DELAY seconds (inital stagger)..."
     sleep $DELAY
