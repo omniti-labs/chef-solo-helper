@@ -63,6 +63,7 @@ export GIT_SSH=$CHEF_ROOT/scripts/resources/git-ssh-wrapper.sh
 # Defaults
 NO_GIT=
 RUN_ONCE=
+RUN_ONCE_SPLAY=
 VERBOSE=
 
 rotate_logs() {
@@ -91,6 +92,7 @@ usage() {
     echo "    -h    -- help"
     echo "    -n    -- don't update using git before running chef-solo"
     echo "    -o    -- only run once"
+    echo "    -j    -- Include random delay (splay) even when running once"
     echo "    -i    -- override default interval ($INTERVAL)"
     echo "    -s    -- override default splay ($SPLAY)"
     echo "    -l    -- override the default logfile ($LOGFILE)"
@@ -98,9 +100,11 @@ usage() {
     exit 1
 }
 
-while getopts ":hnoi:s:l:v" opt; do
+while getopts ":hjnoi:s:l:v" opt; do
     case $opt in
         h)  usage
+            ;;
+        j)  RUN_ONCE_SPLAY=1
             ;;
         n)  NO_GIT=1
             ;;
@@ -128,7 +132,7 @@ LOGDIR=$(dirname $LOGFILE)
 rotate_logs
 
 # If we're running multiple times, then have an initial random delay
-if [[ -z $RUN_ONCE ]]; then
+if [[ -z $RUN_ONCE || -n $RUN_ONE_SPLAY ]]; then
     DELAY=$((RANDOM % SPLAY))
     log "Sleeping for $DELAY seconds (inital stagger)..."
     sleep $DELAY
