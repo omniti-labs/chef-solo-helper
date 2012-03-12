@@ -65,6 +65,7 @@ NO_GIT=
 RUN_ONCE=
 RUN_ONCE_SPLAY=
 VERBOSE=
+SVNUSER=
 
 rotate_logs() {
     # Keep enough logs for a little over a day
@@ -89,18 +90,19 @@ usage() {
     echo "Updates a chef repository from git, and runs chef-solo"
     echo
     echo "Options:"
-    echo "    -h    -- help"
-    echo "    -n    -- don't update using git before running chef-solo"
-    echo "    -o    -- only run once"
-    echo "    -j    -- Include random delay (splay) even when running once"
-    echo "    -i    -- override default interval ($INTERVAL)"
-    echo "    -s    -- override default splay ($SPLAY)"
-    echo "    -l    -- override the default logfile ($LOGFILE)"
-    echo "    -v    -- verbose (print stuff to STDOUT as well as logs)"
+    echo "    -h         -- help"
+    echo "    -n         -- don't update using git before running chef-solo"
+    echo "    -o         -- only run once"
+    echo "    -j         -- Include random delay (splay) even when running once"
+    echo "    -i         -- override default interval ($INTERVAL)"
+    echo "    -s         -- override default splay ($SPLAY)"
+    echo "    -l         -- override the default logfile ($LOGFILE)"
+    echo "    -v         -- verbose (print stuff to STDOUT as well as logs)"
+    echo "    -u         -- svn username" 
     exit 1
 }
 
-while getopts ":hjnoi:s:l:v" opt; do
+while getopts ":hjnoiu:s:l:v" opt; do
     case $opt in
         h)  usage
             ;;
@@ -118,6 +120,8 @@ while getopts ":hjnoi:s:l:v" opt; do
             ;;
         v)  VERBOSE=1
             ;;
+	u)  SVNUSER=$OPTARG
+	    ;;
         *)  echo "Invalid option -- '$OPTARG'"
             usage
             ;;
@@ -139,22 +143,34 @@ if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
 fi
 
 while true; do
-    # Update git
+    # Update repos  
     if [[ -z $NO_GIT ]]; then
         for r in $REPOS; do
             if [[ -d $r ]]; then
-                log "Updating git repository $r"
                 pushd $r > /dev/null
-                if [[ -n $VERBOSE ]]; then
-                    git pull 2>&1 | tee -a $LOGFILE
-                    [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
-                else
-                    git pull >> $LOGFILE 2>&1 ||
-                        error "Failed git pull"
+		if [[ -e .git ]]; then
+                	log "Updating git repository $r"
+                	if [[ -n $VERBOSE ]]; then
+                    		git pull 2>&1 | tee -a $LOGFILE
+                    		[[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
+               		else
+                   		git pull >> $LOGFILE 2>&1 || 
+                        	error "Failed git pull"
+                	fi
+		fi	
+		if [[ -e .svn ]]; then
+			log "Updating svn repository $r"
+                	if [[ -n $VERBOSE ]]; then
+                    		svn up --username $SVNUSER | tee -a $LOGFILE
+                    		[[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
+                	else
+                    		svn up --username $SVNUSER >> $LOGFILE 2>&1 ||
+                        	error "Failed svn up"
+                	fi
                 fi
                 popd > /dev/null
-            fi
-        done
+          fi
+	done
     fi
     log "Running chef-solo"
     # Run chef-solo
