@@ -11,10 +11,13 @@ msg() { echo " * $@"; }
 err() { msg $@; exit 100; }
 safe() { "$@" || err "cannot $@"; }
 
+GIT=/usr/bin/git
+
 mkdir -p $CHEF_ROOT
 
 msg "Moving key in place"
 safe mv $BOOTSTRAP_PATH/$KEY $CHEF_ROOT
+safe chmod 600 $CHEF_ROOT/$KEY
 
 if [[ -n $GIT_HOST ]]; then
     msg "Populating known hosts file"
@@ -23,7 +26,7 @@ if [[ -n $GIT_HOST ]]; then
     safe touch /root/.ssh/known_hosts
     safe chmod 600 /root/.ssh/known_hosts
     grep "$GIT_HOST" /root/.ssh/known_hosts > /dev/null ||
-        safe ssh-keyscan $GIT_HOST >> /root/.ssh/known_hosts
+        safe ssh-keyscan -t rsa,dsa $GIT_HOST >> /root/.ssh/known_hosts
 fi
 
 msg "Making temporary git ssh wrapper to use the chef key"
@@ -35,24 +38,24 @@ chmod +x $GIT_SSH
 pushd $CHEF_ROOT > /dev/null
 if [[ -n $CONFIG_REPO ]]; then
     msg "Cloning config repository"
-    safe git clone $CONFIG_REPO config
+    safe $GIT clone $CONFIG_REPO config
 fi
 if [[ -n $COMMON_REPO ]]; then
     msg "Cloning common repository"
-    safe git clone $COMMON_REPO common
+    safe $GIT clone $COMMON_REPO common
 fi
 if [[ -n $SCRIPTS_REPO ]]; then
     msg "Cloning scripts repository"
-    safe git clone $SCRIPTS_REPO scripts
+    safe $GIT clone $SCRIPTS_REPO scripts
 fi
 popd > /dev/null
 
 msg "Creating local config"
 cat > $CHEF_ROOT/scripts/config.sh <<EOT
 # Fix various paths to get chef-solo working
-export PATH=\$PATH:/opt/omni/lib/ruby/gems/1.8/gems/chef-0.10.4/bin
-export GEM_PATH=/opt/omni/lib/ruby/gems/1.8
-export GEM_HOME=/opt/omni/lib/ruby/gems/1.8
+export PATH=\$PATH:/opt/omni/lib/ruby/gems/1.9/gems/chef-0.10.4/bin
+export GEM_PATH=/opt/omni/lib/ruby/gems/1.9
+export GEM_HOME=/opt/omni/lib/ruby/gems/1.9
 
 # Set path so git works
 export PATH=\$PATH:/opt/omni/bin
