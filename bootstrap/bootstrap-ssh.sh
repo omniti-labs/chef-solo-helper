@@ -45,8 +45,8 @@ safe scp $SSH_OPTS config.sh $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 if [[ -n $NODENAME ]]; then
     msg "Setting hostname on the server"
-    safe ssh $SSH_OPTS $USERNAME@$HOST sudo hostname $NODENAME
+    safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo hostname $NODENAME
 fi
 
 msg "Running bootstrap script on $HOST as root"
-safe ssh $SSH_OPTS $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
+safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
