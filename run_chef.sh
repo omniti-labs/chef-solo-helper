@@ -100,7 +100,7 @@ usage() {
     echo "    -s         -- override default splay ($SPLAY)"
     echo "    -l         -- override the default logfile ($LOGFILE)"
     echo "    -v         -- verbose (print stuff to STDOUT as well as logs)"
-    echo "    -u         -- svn username" 
+    echo "    -u         -- svn username"
     exit 1
 }
 
@@ -124,8 +124,8 @@ while getopts ":hdjnoiu:s:l:v" opt; do
             ;;
         v)  VERBOSE=1
             ;;
-	u)  SVNUSER=$OPTARG
-	    ;;
+        u)  SVNUSER=$OPTARG
+            ;;
         *)  echo "Invalid option -- '$OPTARG'"
             usage
             ;;
@@ -147,34 +147,34 @@ if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
 fi
 
 while true; do
-    # Update repos  
+    # Update repos
     if [[ -z $NO_GIT ]]; then
         for r in $REPOS; do
             if [[ -d $r ]]; then
                 pushd $r > /dev/null
-		if [[ -e .git ]]; then
-                	log "Updating git repository $r"
-                	if [[ -n $VERBOSE ]]; then
-                    		git pull 2>&1 | tee -a $LOGFILE
-                    		[[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
-               		else
-                   		git pull >> $LOGFILE 2>&1 || 
-                        	error "Failed git pull"
-                	fi
-		fi	
-		if [[ -e .svn ]]; then
-			log "Updating svn repository $r"
-                	if [[ -n $VERBOSE ]]; then
-                    		svn up --username $SVNUSER | tee -a $LOGFILE
-                    		[[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
-                	else
-                    		svn up --username $SVNUSER >> $LOGFILE 2>&1 ||
-                        	error "Failed svn up"
-                	fi
+                if [[ -e .git ]]; then
+                    log "Updating git repository $r"
+                    if [[ -n $VERBOSE ]]; then
+                        git pull 2>&1 | tee -a $LOGFILE
+                        [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
+                    else
+                        git pull >> $LOGFILE 2>&1 ||
+                        error "Failed git pull"
+                    fi
+                fi
+                if [[ -e .svn ]]; then
+                    log "Updating svn repository $r"
+                    if [[ -n $VERBOSE ]]; then
+                        svn up --username $SVNUSER | tee -a $LOGFILE
+                        [[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
+                    else
+                        svn up --username $SVNUSER >> $LOGFILE 2>&1 ||
+                        error "Failed svn up"
+                    fi
                 fi
                 popd > /dev/null
-          fi
-	done
+            fi
+        done
     fi
     log "Running chef-solo"
     # Run chef-solo
