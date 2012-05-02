@@ -66,6 +66,7 @@ RUN_ONCE=
 RUN_ONCE_SPLAY=
 VERBOSE=
 SVNUSER=
+DEBUG=
 
 rotate_logs() {
     # Keep enough logs for a little over a day
@@ -91,6 +92,7 @@ usage() {
     echo
     echo "Options:"
     echo "    -h         -- help"
+    echo "    -d         -- Run chef with debug logging"
     echo "    -n         -- don't update using git before running chef-solo"
     echo "    -o         -- only run once"
     echo "    -j         -- Include random delay (splay) even when running once"
@@ -102,9 +104,11 @@ usage() {
     exit 1
 }
 
-while getopts ":hjnoiu:s:l:v" opt; do
+while getopts ":hdjnoiu:s:l:v" opt; do
     case $opt in
         h)  usage
+            ;;
+        d)  DEBUG=1
             ;;
         j)  RUN_ONCE_SPLAY=1
             ;;
@@ -174,10 +178,13 @@ while true; do
     fi
     log "Running chef-solo"
     # Run chef-solo
+    DEBUGLOG=
+    [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
     chef-solo -c solo.rb \
         -j $NODEPATH/$NODENAME.json \
         -N $NODENAME \
-        -L $LOGFILE
+        -L $LOGFILE \
+        $DEBUGLOG
     # Quit if we're only running once
     [[ -n $RUN_ONCE ]] && exit
     # Otherwise, wait and do it all over
