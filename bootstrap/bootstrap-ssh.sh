@@ -1,7 +1,21 @@
 #!/bin/bash
 # Bootstrap an ec2 system remotely via ssh
 
-. $(dirname $0)/config.sh
+CONFIG_FILE=$(dirname $0)/config.sh
+while getopts ":c:" opt; do
+    case $opt in
+        c)
+            CONFIG_FILE=$OPTARG
+            ;;
+        *)
+            echo "Invalid option -- '$OPTARG'"
+            exit 1
+            ;;
+    esac
+done
+shift $(($OPTIND-1))
+
+. $CONFIG_FILE
 
 HOST=$1
 # Allow specifying the hostname on the command line - this is used to
