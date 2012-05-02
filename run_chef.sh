@@ -55,6 +55,9 @@ NODEPATH="$CHEF_ROOT/config/nodes"
 # Use a custom wrapper for ssh with git
 export GIT_SSH=$CHEF_ROOT/scripts/resources/git-ssh-wrapper.sh
 
+# Path to lockfile
+LOCKFILE=/tmp/run_chef.lock
+
 # Config.sh isn't kept in version control and can be created to override any
 # values set above as needed. This file may also be created by bootstrap
 # scripts.
@@ -104,6 +107,25 @@ usage() {
     exit 1
 }
 
+lock() {
+    if ( set -o noclobber; echo "$$" > $LOCKFILE ) 2>/dev/null; then
+        trap "rm -f $LOCKFILE; exit $?" INT TERM EXIT
+        [[ -n $VERBOSE ]] && echo "Aquired lock"
+        return 0
+    fi
+    local PID=`cat $LOCKFILE`
+    local RUNNING=""
+    [[ -d /proc/$PID ]] && RUNNING=" (Running)"
+    echo "Failed to acquire lock. Held by $PID$RUNNING"
+    return 1
+}
+
+unlock() {
+    [[ -n $VERBOSE ]] && echo "Releasing lock"
+    rm -f $LOCKFILE
+    trap - INT TERM EXIT
+}
+
 while getopts ":hdjnoiu:s:l:v" opt; do
     case $opt in
         h)  usage
@@ -147,44 +169,47 @@ if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
 fi
 
 while true; do
-    # Update repos
-    if [[ -z $NO_GIT ]]; then
-        for r in $REPOS; do
-            if [[ -d $r ]]; then
-                pushd $r > /dev/null
-                if [[ -e .git ]]; then
-                    log "Updating git repository $r"
-                    if [[ -n $VERBOSE ]]; then
-                        git pull 2>&1 | tee -a $LOGFILE
-                        [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
-                    else
-                        git pull >> $LOGFILE 2>&1 ||
-                        error "Failed git pull"
+    if lock; then
+        # Update repos
+        if [[ -z $NO_GIT ]]; then
+            for r in $REPOS; do
+                if [[ -d $r ]]; then
+                    pushd $r > /dev/null
+                    if [[ -e .git ]]; then
+                        log "Updating git repository $r"
+                        if [[ -n $VERBOSE ]]; then
+                            git pull 2>&1 | tee -a $LOGFILE
+                            [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
+                        else
+                            git pull >> $LOGFILE 2>&1 ||
+                            error "Failed git pull"
+                        fi
                     fi
-                fi
-                if [[ -e .svn ]]; then
-                    log "Updating svn repository $r"
-                    if [[ -n $VERBOSE ]]; then
-                        svn up --username $SVNUSER | tee -a $LOGFILE
-                        [[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
-                    else
-                        svn up --username $SVNUSER >> $LOGFILE 2>&1 ||
-                        error "Failed svn up"
+                    if [[ -e .svn ]]; then
+                        log "Updating svn repository $r"
+                        if [[ -n $VERBOSE ]]; then
+                            svn up --username $SVNUSER | tee -a $LOGFILE
+                            [[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
+                        else
+                            svn up --username $SVNUSER >> $LOGFILE 2>&1 ||
+                            error "Failed svn up"
+                        fi
                     fi
+                    popd > /dev/null
                 fi
-                popd > /dev/null
-            fi
-        done
+            done
+        fi
+        log "Running chef-solo"
+        # Run chef-solo
+        DEBUGLOG=
+        [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
+        chef-solo -c solo.rb \
+            -j $NODEPATH/$NODENAME.json \
+            -N $NODENAME \
+            -L $LOGFILE \
+            $DEBUGLOG
+        unlock
     fi
-    log "Running chef-solo"
-    # Run chef-solo
-    DEBUGLOG=
-    [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
-    chef-solo -c solo.rb \
-        -j $NODEPATH/$NODENAME.json \
-        -N $NODENAME \
-        -L $LOGFILE \
-        $DEBUGLOG
     # Quit if we're only running once
     [[ -n $RUN_ONCE ]] && exit
     # Otherwise, wait and do it all over
