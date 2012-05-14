@@ -1,7 +1,21 @@
 #!/bin/bash
 # Bootstrap an ec2 system remotely via ssh
 
-. $(dirname $0)/config.sh
+CONFIG_FILE=$(dirname $0)/config.sh
+while getopts ":c:" opt; do
+    case $opt in
+        c)
+            CONFIG_FILE=$OPTARG
+            ;;
+        *)
+            echo "Invalid option -- '$OPTARG'"
+            exit 1
+            ;;
+    esac
+done
+shift $(($OPTIND-1))
+
+. $CONFIG_FILE
 
 HOST=$1
 # Allow specifying the hostname on the command line - this is used to
@@ -31,8 +45,8 @@ safe scp $SSH_OPTS config.sh $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 if [[ -n $NODENAME ]]; then
     msg "Setting hostname on the server"
-    safe ssh $SSH_OPTS $USERNAME@$HOST sudo hostname $NODENAME
+    safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo hostname $NODENAME
 fi
 
 msg "Running bootstrap script on $HOST as root"
-safe ssh $SSH_OPTS $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
+safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
