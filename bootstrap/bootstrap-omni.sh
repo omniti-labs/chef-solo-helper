@@ -53,7 +53,7 @@ popd > /dev/null
 msg "Creating local config"
 cat > $CHEF_ROOT/scripts/config.sh <<EOT
 # Fix various paths to get chef-solo working
-export PATH=\$PATH:/opt/omni/lib/ruby/gems/1.9/gems/chef-0.10.4/bin
+export PATH=\$PATH:/opt/omni/lib/ruby/gems/1.9/gems/chef-0.10.8/bin
 export GEM_PATH=/opt/omni/lib/ruby/gems/1.9
 export GEM_HOME=/opt/omni/lib/ruby/gems/1.9
 
