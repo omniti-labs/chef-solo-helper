@@ -9,8 +9,6 @@ HOST=$1
 # to use
 NODENAME=$2
 
-REPOS=$3
-
 # Utility functions
 msg() { echo " * $@"; }
 err() { msg $@; exit 100; }
@@ -19,15 +17,14 @@ safe() { "$@" || err "cannot $@"; }
 SSH_OPTS=
 [[ -n $SSH_KEY ]] && SSH_OPTS="-i $SSH_KEY"
 
-if [[ -n $REPOS ]]; then
-	msg "Added Apropo pkg repos"
-	ssh $SSH_OPTS $USERNAME@$HOST pkg set-publisher -g http://pkg-internal.omniti.com/omniti-ms ms.omniti.com
-	msg "Installing needed PKG's"
-	ssh $SSH_OPTS $USERNAME@$HOST pkg install git chef
-fi
+msg "Added Apropo pkg repos"
+ssh $SSH_OPTS $USERNAME@$HOST "pkg publisher ms.omniti.com || pkg set-publisher -g http://pkg-internal.omniti.com/omniti-ms ms.omniti.com"
+
+msg "Installing needed PKG's"
+ssh $SSH_OPTS $USERNAME@$HOST "pkg install git chef"
 
 msg "Making bootstrap dir on the server"
-safe ssh $SSH_OPTS $USERNAME@$HOST mkdir -p $BOOTSTRAP_PATH
+safe ssh $SSH_OPTS $USERNAME@$HOST "mkdir -p $BOOTSTRAP_PATH"
 
 msg "Copying key"
 safe scp $SSH_OPTS $KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
@@ -40,8 +37,8 @@ safe scp $SSH_OPTS config.sh $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 if [[ -n $NODENAME ]]; then
     msg "Setting hostname on the server"
-    safe ssh $SSH_OPTS $USERNAME@$HOST sudo hostname $NODENAME
+    safe ssh $SSH_OPTS $USERNAME@$HOST "sudo hostname $NODENAME"
 fi
 
 msg "Running bootstrap script on $HOST as root"
-safe ssh $SSH_OPTS $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
+safe ssh $SSH_OPTS $USERNAME@$HOST "sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT"
