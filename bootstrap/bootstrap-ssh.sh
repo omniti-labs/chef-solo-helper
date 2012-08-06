@@ -48,7 +48,7 @@ msg "Copying bootstrap script"
 safe scp $SCP_OPTS $BOOTSTRAP_SCRIPT $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 msg "Copying configuration"
-safe scp $SCP_OPTS config.sh $USERNAME@$HOST:$BOOTSTRAP_PATH
+safe scp $SCP_OPTS $CONFIG_FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 if [[ -n $NODENAME ]]; then
     msg "Setting hostname on the server"
