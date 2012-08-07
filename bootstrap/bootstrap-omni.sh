@@ -1,7 +1,7 @@
 #!/bin/bash
 ##############################################################################
 # Bootstrap script for chef to be run on the remote server
-# Version for OMNI
+# Version for OMNIOS
 ##############################################################################
 
 . $(dirname $0)/config.sh
@@ -18,15 +18,31 @@ mkdir -p $CHEF_ROOT
 msg "Moving key in place"
 safe mv $BOOTSTRAP_PATH/$KEY $CHEF_ROOT
 safe chmod 600 $CHEF_ROOT/$KEY
+safe chown root:root $CHEF_ROOT/$KEY
 
-if [[ -n $GIT_HOST ]]; then
+if [[ -n $SCHLEP_FILES ]]; then
+    for FILE in "$SCHLEP_FILES"; do 
+        msg "Moving in schlep file $FILE"
+        safe mv $BOOTSTRAP_PATH/$FILE $CHEF_ROOT
+        safe chown root:root $CHEF_ROOT/$FILE
+    done
+fi
+
+# Grandfather in old GIT_HOST variable
+if [[ -z $SSH_KNOWN_HOSTS ]]; then 
+    SSH_KNOWN_HOSTS=$GIT_HOST
+fi
+
+if [[ -n $SSH_KNOWN_HOSTS ]]; then
     msg "Populating known hosts file"
     safe mkdir -p /root/.ssh/
     safe chmod 700 /root/.ssh/
     safe touch /root/.ssh/known_hosts
     safe chmod 600 /root/.ssh/known_hosts
-    grep "$GIT_HOST" /root/.ssh/known_hosts > /dev/null ||
-        safe ssh-keyscan -t rsa,dsa $GIT_HOST >> /root/.ssh/known_hosts
+    for HOST in "$SSH_KNOWN_HOSTS"; do
+        grep "$HOST" /root/.ssh/known_hosts > /dev/null || \
+         ssh-keyscan -t rsa,dsa $HOST >> /root/.ssh/known_hosts
+    done
 fi
 
 msg "Making temporary git ssh wrapper to use the chef key"
@@ -36,14 +52,6 @@ echo "ssh -i $CHEF_ROOT/$KEY \"\$@\"" > $GIT_SSH
 chmod +x $GIT_SSH
 
 pushd $CHEF_ROOT > /dev/null
-if [[ -n $CONFIG_REPO ]]; then
-    msg "Cloning config repository"
-    safe $GIT clone $CONFIG_REPO config
-fi
-if [[ -n $COMMON_REPO ]]; then
-    msg "Cloning common repository"
-    safe $GIT clone $COMMON_REPO common
-fi
 if [[ -n $SCRIPTS_REPO ]]; then
     msg "Cloning scripts repository"
     safe $GIT clone $SCRIPTS_REPO scripts
@@ -59,6 +67,10 @@ export GEM_HOME=/opt/omni/lib/ruby/gems/1.9
 
 # Set path so git works
 export PATH=\$PATH:/opt/omni/bin
+
+# Pass on checkout fetch command
+export FETCH_CHECKOUT_LIST_COMMAND="$FETCH_CHECKOUT_LIST_COMMAND"
+
 EOT
 
 msg "Running chef for the first time"
