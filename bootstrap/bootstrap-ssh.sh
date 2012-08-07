@@ -1,5 +1,5 @@
 #!/bin/bash
-# Bootstrap an ec2 system remotely via ssh
+# Bootstrap a system remotely via ssh
 
 CONFIG_FILE=$(dirname $0)/config.sh
 SSH_PORT=22
@@ -47,13 +47,18 @@ safe scp $SCP_OPTS $KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
 msg "Copying bootstrap script"
 safe scp $SCP_OPTS $BOOTSTRAP_SCRIPT $USERNAME@$HOST:$BOOTSTRAP_PATH
 
-msg "Copying configuration"
-safe scp $SCP_OPTS $CONFIG_FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
+msg "Copying configuration (renaming as config.sh)"
+safe scp $SCP_OPTS $CONFIG_FILE $USERNAME@$HOST:$BOOTSTRAP_PATH/config.sh
 
 if [[ -n $NODENAME ]]; then
     msg "Setting hostname on the server"
     safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo hostname $NODENAME
 fi
+
+for FILE in "$SCHLEP_FILES"; do 
+    msg "Uploading schlep file $FILE"
+    safe scp $SCP_OPTS $FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
+done
 
 msg "Running bootstrap script on $HOST as root"
 safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT

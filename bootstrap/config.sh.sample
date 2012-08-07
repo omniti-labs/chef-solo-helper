@@ -25,12 +25,14 @@ BOOTSTRAP_SCRIPT="bootstrap.sh"
 # Repository configuration #
 ############################
 
-# Where the chef scripts are stored
-SCRIPTS_REPO="git@git.example.com:chef-scripts.git"
-# Where the main configuration is stored
-CONFIG_REPO="git@git.example.com:chef.git"
-# For cookbooks common to multiple repositories
-COMMON_REPO=""
+# Hostnames to pre-populate
+SSH_KNOWN_HOSTS="trac.omniti.net src.omniti.com"
 
-# Hostname for the git server (to add to the known hosts file)
-GIT_HOST="git.example.com"
+# Where the chef scripts are stored.  All chef-solo installations get this.
+SCRIPTS_REPO="src@src.omniti.com:~internal/chef/scripts"
+
+# How to get the list of checkouts
+FETCH_CHECKOUT_LIST_COMMAND="cat /var/chef-solo/checkout-list"
+
+# Extra files to push via SSH (space separated)
+SCHLEP_FILES="checkout-list"
