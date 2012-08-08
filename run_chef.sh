@@ -328,15 +328,12 @@ while true; do
                 update_combined_links $CHECKOUT
             done
         fi
-        log "Running chef-solo"
-        # Run chef-solo
+        
         DEBUGLOG=
          [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
-        chef-solo -c solo.rb \
-             -j $NODEPATH/$NODENAME.json \
-             -N $NODENAME \
-             -L $LOGFILE \
-             $DEBUGLOG
+        CMD="chef-solo -c solo.rb -j $NODEPATH/$NODENAME.json -N $NODENAME -L $LOGFILE $DEBUGLOG"
+        log "Running chef-solo as $CMD"
+        $CMD
         unlock
     fi
     # Quit if we're only running once
