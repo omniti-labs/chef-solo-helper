@@ -221,7 +221,7 @@ split_checkout_line() {
 
 # Examines CO_CREDS, and exports vars to control behavior of git-ssh-wrapper
 setup_git_creds() {
-    if [[ $CO_CREDS = 'RELY' ]]; then
+    if [[ $CO_CREDS = 'AGENT' ]]; then
         export RELY_ON_SSH_AGENT="yes"
     else
         unset RELY_ON_SSH_AGENT

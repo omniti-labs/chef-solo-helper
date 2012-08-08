@@ -55,10 +55,12 @@ if [[ -n $NODENAME ]]; then
     safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo hostname $NODENAME
 fi
 
-for FILE in "$SCHLEP_FILES"; do 
-    msg "Uploading schlep file $FILE"
-    safe scp $SCP_OPTS $FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
-done
+if [[ -n $SCHLEP_FILES ]]; then
+    for FILE in "$SCHLEP_FILES"; do 
+        msg "Uploading schlep file $FILE"
+        safe scp $SCP_OPTS $FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
+    done
+fi
 
 msg "Running bootstrap script on $HOST as root"
 safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo $BOOTSTRAP_PATH/$BOOTSTRAP_SCRIPT
