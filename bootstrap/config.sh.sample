@@ -17,10 +17,6 @@ USERNAME="ubuntu"
 # The name of the bootstrap script to copy over
 BOOTSTRAP_SCRIPT="bootstrap.sh"
 
-# Location of the ssh key you use to connect to the server. Leave blank if you
-# are using the default key or the key is loaded into your ssh agent already.
-#SSH_KEY="$HOME/.ssh/ec2.asc"
-
 ############################
 # Repository configuration #
 ############################
