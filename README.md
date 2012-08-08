@@ -8,14 +8,11 @@ configuration.
 
 ### Git key
 
-Get the secret key for the account that has access to the git repository where
-you're storing the chef repository, and put it in /root/.ssh/id_rsa_chef:
+You may need to install SSH keys to the system; if using a bootstrap script, it may handle this for you.
 
-    sudo mkdir /root/.ssh
-    sudo chmod 700 /root/.ssh
-    sudo cp id_rsa_chef /root/.ssh/
-    sudo chmod 600 /root/.ssh/id_rsa_chef
+Keys are typically stored under /var/chef-solo, eg chef.key .  It must be readable only by root.
 
+You can also specify keys to use for specific repos using the checkout list.
 
 ### Repositories
 
@@ -44,17 +41,17 @@ Check out the scripts repository to `/var/chef-solo/scripts/`:
 
 run_chef.sh will fetch a list of additional checkouts.  The list should be in CSV format with no spaces between fields.  Example:
 
-  git,src@src.omniti.com:~internal/chef/systems,omniti-internal-systems,master,chef.key
-  git,src@src.omniti.com:~internal/chef/common,omniti-internal-common,multi-repo,chef.key
-  git,git@trac-il.omniti.net:myproject/support/chef,myproject-chef,master,AGENT
-  git,https://github.com/opscode-cookbooks/php.git,opscode-php/cookbooks/php,master,NONE
+   git,src@src.omniti.com:~internal/chef/systems,omniti-internal-systems,master,chef.key
+   git,src@src.omniti.com:~internal/chef/common,omniti-internal-common,multi-repo,chef.key
+   git,git@trac-il.omniti.net:myproject/support/chef,myproject-chef,master,AGENT
+   git,https://github.com/opscode-cookbooks/php.git,opscode-php/cookbooks/php,master,NONE
 
 The fields are: VCS,repo address, directory name, branch, credentials
-VCS may be either 'git' or 'svn'.
-repo address is the identifier of the repository from which to obtain the checkout.
-directory name is the path under /var/chef-solo/checkouts to clone/checkout into.  It may contain slashes.
-branch is the name of the git branch.  Leave blank for svn (use repo address for svn branching)
-credentials is the method to authenticate to the repo server.  NONE means use no authentication.  AGENT means to rely on a running ssh-agent to provide credentials.  All other values are taken to specify the location of a SSH private key, relative to /var/chef-solo, that should be used with a GIT_SSH wrapper.
+ * VCS may be either 'git' or 'svn'.
+ * repo address is the identifier of the repository from which to obtain the checkout.
+ * directory name is the path under /var/chef-solo/checkouts to clone/checkout into.  It may contain slashes.
+ * branch is the name of the git branch.  Leave blank for svn (use repo address for svn branching)
+ * credentials is the method to authenticate to the repo server.  NONE means use no authentication.  AGENT means to rely on a running ssh-agent to provide credentials.  All other values are taken to specify the location of a SSH private key, relative to /var/chef-solo, that should be used with a GIT_SSH wrapper.
 
 On each run, the checkout list will be re-fetched, and each checkout will be cloned/checked-out (if absent) or pulled/updated (if present).  No facility exists for deleting a checkout.
 
