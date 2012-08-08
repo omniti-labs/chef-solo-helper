@@ -50,6 +50,9 @@ THINGS_TO_COMBINE="nodes roles data_bags handlers"
 
 CHEF_ROOT="/var/chef-solo"
 
+# Command to fetch checkout list
+FETCH_CHECKOUT_LIST_COMMAND="cat /var/chef-solo/checkout-list"
+
 # Use a custom wrapper for ssh with git
 # Controlled by two more env vars, RELY_ON_SSH_AGENT and GIT_SSH_IDENTITY
 export GIT_SSH=$CHEF_ROOT/scripts/resources/git-ssh-wrapper.sh
