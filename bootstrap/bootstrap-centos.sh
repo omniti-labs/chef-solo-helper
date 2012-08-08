@@ -69,5 +69,5 @@ popd > /dev/null
 
 msg "Running chef for the first time"
 pushd $CHEF_ROOT/scripts > /dev/null
-safe ./run_chef.sh -onv
+safe ./run_chef.sh -ov
 popd > /dev/null
