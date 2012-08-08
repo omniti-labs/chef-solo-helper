@@ -228,7 +228,7 @@ setup_git_creds() {
         if [[ $CO_CREDS = 'NONE' ]]; then
             unset GIT_SSH_IDENTITY
         else
-            export GIT_SSH_IDENTITY=$CO_CREDS
+            export GIT_SSH_IDENTITY=$CHEF_ROOT/$CO_CREDS
         fi
     fi
 }
