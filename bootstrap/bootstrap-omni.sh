@@ -60,13 +60,13 @@ popd > /dev/null
 
 msg "Creating local config"
 cat > $CHEF_ROOT/scripts/config.sh <<EOT
-# Fix various paths to get chef-solo working
+# Fix various paths to get chef-solo and git working
+export PATH=\$PATH:/opt/omni/bin
 export PATH=\$PATH:/opt/omni/lib/ruby/gems/1.9/gems/chef-0.10.8/bin
+export PATH=\$PATH:/usr/bin
+
 export GEM_PATH=/opt/omni/lib/ruby/gems/1.9
 export GEM_HOME=/opt/omni/lib/ruby/gems/1.9
-
-# Set path so git works
-export PATH=\$PATH:/opt/omni/bin
 
 # Pass on checkout fetch command
 export FETCH_CHECKOUT_LIST_COMMAND="$FETCH_CHECKOUT_LIST_COMMAND"
