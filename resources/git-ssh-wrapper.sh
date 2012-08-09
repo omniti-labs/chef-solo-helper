@@ -7,10 +7,14 @@
 ##############################################################################
 
 if [[ -z $RELY_ON_SSH_AGENT ]]; then
+
+    SSH_OPTS="-a"
+
     if [[ -z $GIT_SSH_IDENTITY ]]; then
         GIT_SSH_IDENTITY=/var/chef-solo/chef.key
     fi
-    SSH_OPTS="-i $GIT_SSH_IDENTITY"
+    SSH_OPTS="$SSH_OPTS -i $GIT_SSH_IDENTITY"
+
 fi
 
 ssh $SSH_OPTS "$@"
