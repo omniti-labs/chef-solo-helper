@@ -8,8 +8,8 @@
 
 if [[ -z $RELY_ON_SSH_AGENT ]]; then
 
-    SSH_OPTS="-a"
-
+    unset SSH_AUTH_SOCK
+ 
     if [[ -z $GIT_SSH_IDENTITY ]]; then
         GIT_SSH_IDENTITY=/var/chef-solo/chef.key
     fi
