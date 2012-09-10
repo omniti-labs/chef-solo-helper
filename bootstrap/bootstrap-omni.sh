@@ -13,6 +13,11 @@ safe() { "$@" || err "cannot $@"; }
 
 GIT=/usr/bin/git
 
+if [[ -e $CHEF_ROOT ]]; then
+    msg "Found existing $CHEF_ROOT - moving to $CHEF_ROOT.old"
+    mv $CHEF_ROOT $CHEF_ROOT.old
+fi
+
 mkdir -p $CHEF_ROOT
 
 msg "Moving key in place"
