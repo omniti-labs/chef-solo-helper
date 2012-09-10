@@ -309,6 +309,12 @@ fi
 CHECKOUTS_DIR=$CHEF_ROOT/checkouts
 mkdir -p $CHECKOUTS_DIR
 
+# Check for killswitch and exit
+if [[ -e $CHEF_ROOT/killswitch ]]; then
+    log "Killswitch fill $CHEF_ROOT/killswitch exists - exiting immediately"
+    exit
+fi
+
 
 # If we're running multiple times, then have an initial random delay
 if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
