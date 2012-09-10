@@ -311,7 +311,7 @@ mkdir -p $CHECKOUTS_DIR
 
 # Check for killswitch and exit
 if [[ -e $CHEF_ROOT/killswitch ]]; then
-    log "Killswitch fill $CHEF_ROOT/killswitch exists - exiting immediately"
+    log "Killswitch file $CHEF_ROOT/killswitch exists - exiting immediately"
     exit
 fi
 
