@@ -101,6 +101,7 @@ usage() {
     echo "    -n         -- don't update using git before running chef-solo"
     echo "    -o         -- only run once"
     echo "    -j         -- Include random delay (splay) even when running once"
+    echo "    -K         -- if a killswitch file exists, ignore it"
     echo "    -i         -- override default interval ($INTERVAL)"
     echo "    -s         -- override default splay ($SPLAY)"
     echo "    -l         -- override the default logfile ($LOGFILE)"
@@ -259,13 +260,15 @@ update_combined_links() {
 }
 
 
-while getopts ":hdjnoiu:s:l:v" opt; do
+while getopts ":hdjKnoiu:s:l:v" opt; do
     case $opt in
         h)  usage
             ;;
         d)  DEBUG=1
             ;;
         j)  RUN_ONCE_SPLAY=1
+            ;;
+        K)  IGNORE_KILLSWITCH=1
             ;;
         n)  NO_GIT=1
             ;;
@@ -310,11 +313,12 @@ CHECKOUTS_DIR=$CHEF_ROOT/checkouts
 mkdir -p $CHECKOUTS_DIR
 
 # Check for killswitch and exit
-if [[ -e $CHEF_ROOT/killswitch ]]; then
-    log "Killswitch file $CHEF_ROOT/killswitch exists - exiting immediately"
-    exit
+if [[ -z $IGNORE_KILLSWITCH ]]; then
+    if [[ -e $CHEF_ROOT/killswitch ]]; then
+        log "Killswitch file $CHEF_ROOT/killswitch exists - exiting immediately"
+        exit
+    fi
 fi
-
 
 # If we're running multiple times, then have an initial random delay
 if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
