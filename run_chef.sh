@@ -355,7 +355,7 @@ while true; do
          [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
         CMD="chef-solo -c solo.rb -j $NODEPATH/$NODENAME.json -N $NODENAME -L $LOGFILE $DEBUGLOG"
         log "Running chef-solo as $CMD"
-        # $CMD
+        $CMD
         unlock
     fi
     # Quit if we're only running once
