@@ -253,7 +253,19 @@ update_combined_links() {
                 log "Re-linking combined $WHAT from $CO_DIR"
             fi
             pushd $COMBINED_DIR/$WHAT > /dev/null            
-            ls $CHECKOUTS_DIR/$CO_DIR/$WHAT/*.{rb,json} 2> /dev/null | xargs -n 1 -I {} ln -sf {} . # Use -f so last one wins
+            if [[ $WHAT == 'data_bags' ]]; then
+                # Need a second layer of dirs for databags
+                for DBAG in `ls $CHECKOUTS_DIR/$CO_DIR/$WHAT`; do 
+                    if [[ -d $CHECKOUTS_DIR/$CO_DIR/$WHAT/$DBAG ]]; then
+                        mkdir -p $DBAG
+                        pushd $DBAG > /dev/null
+                        ls $CHECKOUTS_DIR/$CO_DIR/$WHAT/$DBAG/*.{rb,json} 2> /dev/null | xargs -n 1 -I {} ln -sf {} . # Use -f so last one wins
+                        popd
+                    fi
+                done
+            else
+                ls $CHECKOUTS_DIR/$CO_DIR/$WHAT/*.{rb,json} 2> /dev/null | xargs -n 1 -I {} ln -sf {} . # Use -f so last one wins
+            fi
             popd > /dev/null
         fi
     done
@@ -343,7 +355,7 @@ while true; do
          [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
         CMD="chef-solo -c solo.rb -j $NODEPATH/$NODENAME.json -N $NODENAME -L $LOGFILE $DEBUGLOG"
         log "Running chef-solo as $CMD"
-        $CMD
+        # $CMD
         unlock
     fi
     # Quit if we're only running once
