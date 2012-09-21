@@ -142,7 +142,11 @@ update_checkout() {
     split_checkout_line $1
     pushd $CHECKOUTS_DIR > /dev/null
     if [[ $CO_VCS = 'git' ]]; then
-        update_git       
+        if [[ -n $VERBOSE ]]; then
+            update_git | tee -a $LOGFILE
+        else
+            update_git >> $LOGFILE
+        fi
     fi
     if [[ $CO_VCS = 'svn' ]]; then
         update_svn
@@ -159,15 +163,20 @@ update_git() {
         # pull/update
         log "Pulling checkout $CO_DIR"
         pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
-
-        if [[ -n $VERBOSE ]]; then
-            git checkout $CO_BRANCH 2>&1 | tee -a $LOGFILE
-            [[ $PIPESTATUS -eq 0 ]] || error "Failed git branch switch"
-            git pull 2>&1 | tee -a $LOGFILE
-            [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
+        git remote set-url origin $CO_REPO
+        git fetch origin 2>&1 || error "Failed git fetch"
+        local local_branch=$(git rev-parse --verify --symbolic-full-name $CO_BRANCH 2> /dev/null)
+        # no branch or bad commit
+        if [[ $PIPESTATUS -ne 0 ]]; then
+            local remote_branch=$(git rev-parse --verify --symbolic-full-name origin/$CO_BRANCH 2> /dev/null)
+            [[ $PIPESTATUS -eq 0 ]] || error "Unable to find branch or commit $CO_BRANCH"
+            git checkout -b $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        # local branch already exists
+        elif [[ -n $local_branch ]]; then
+            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            git merge origin/$CO_BRANCH || error "Failed to merge origin/$CO_BRANCH"
         else
-            git checkout $CO_BRANCH >> $LOGFILE 2>&1 || error "Failed git branch switch"
-            git pull >> $LOGFILE 2>&1 || error "Failed git pull"
+            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         fi
 
         popd > /dev/null
@@ -175,10 +184,17 @@ update_git() {
         # Clone
         log "Pulling checkout $CO_DIR"
         # assume verbose mode here
-        git clone -b $CO_BRANCH $CO_REPO $CO_DIR 2>&1 | tee -a $LOGFILE
+        git clone --no-checkout $CO_REPO $CO_DIR 2>&1 | tee -a $LOGFILE
         [[ $PIPESTATUS -eq 0 ]] || error "Failed git clone"
+        pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
+        local remote_branch=$(git rev-parse --verify -q origin/$CO_BRANCH 2> /dev/null)
+        if [[ $PIPESTATUS -eq 0 ]]; then
+            git checkout -B $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        else
+            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        fi
+        popd > /dev/null
     fi
- 
 }
 
 update_svn() {
