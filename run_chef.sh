@@ -168,8 +168,8 @@ update_git() {
         local local_branch=$(git rev-parse --verify --symbolic-full-name $CO_BRANCH 2> /dev/null)
         # no branch or bad commit
         if [[ $PIPESTATUS -ne 0 ]]; then
-            local remote_branch=$(git rev-parse --verify --symbolic-full-name origin/$CO_BRANCH 2> /dev/null)
-            [[ $PIPESTATUS -eq 0 ]] || error "Unable to find branch or commit $CO_BRANCH"
+            git rev-parse --verify -q --symbolic-full-name origin/$CO_BRANCH ||
+                error "Unable to find branch or commit $CO_BRANCH"
             git checkout -b $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         # local branch already exists
         elif [[ -n $local_branch ]]; then
@@ -187,9 +187,13 @@ update_git() {
         git clone --no-checkout $CO_REPO $CO_DIR 2>&1 | tee -a $LOGFILE
         [[ $PIPESTATUS -eq 0 ]] || error "Failed git clone"
         pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
-        local remote_branch=$(git rev-parse --verify -q origin/$CO_BRANCH 2> /dev/null)
-        if [[ $PIPESTATUS -eq 0 ]]; then
-            git checkout -B $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        if git rev-parse --verify -q origin/$CO_BRANCH; then
+            local current_branch=`git symbolic-ref --short HEAD 2> /dev/null`
+            if [[ $current_branch = $CO_BRANCH ]]; then
+                git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            else
+                git checkout -B $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            fi
         else
             git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         fi
