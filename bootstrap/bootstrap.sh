@@ -4,6 +4,7 @@
 ##############################################################################
 
 . $(dirname $0)/config.sh
+. /etc/lsb-release
 
 # Utility functions
 msg() { echo " * $@"; }
@@ -13,8 +14,12 @@ safe() { "$@" || err "cannot $@"; }
 if [[ ! -f /usr/bin/chef-solo ]]; then
     msg "Installing chef"
     safe apt-get update
-    safe apt-get install -y ruby ruby1.8-dev build-essential wget \
-        libruby-extras libruby1.8-extras
+    if [[ $DISTRIB_RELEASE == "12.04" ]]; then
+        safe apt-get install -y ruby ruby1.8-dev build-essential wget
+    else
+        safe apt-get install -y ruby ruby1.8-dev build-essential wget \
+            libruby-extras libruby1.8-extras
+    fi
     safe wget http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz
     safe tar zxf rubygems-1.6.2.tgz
     pushd rubygems-1.6.2 > /dev/null

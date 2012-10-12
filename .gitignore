@@ -1,4 +1,7 @@
 .rvmrc
 chef-solo.log
 config.sh
+config.rb
+id_rsa_chef
+chef.key
 *.swp
