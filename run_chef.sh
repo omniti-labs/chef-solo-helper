@@ -192,7 +192,7 @@ update_git() {
             if [ $current_branch -ne $CO_BRANCH ]; then
                 git branch -f $CO_BRANCH origin/$CO_BRANCH || error "Failed to create branch $CO_BRANCH"
             fi
-        else
+        fi
         git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         popd > /dev/null
     fi
