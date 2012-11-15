@@ -286,6 +286,9 @@ update_combined_links() {
             popd > /dev/null
         fi
     done
+
+    # Remove any leftover symlinks that don't link to anything anymore
+    find $COMBINED_DIR -type l | while read f; do if [ ! -e "$f" ]; then rm -f "$f"; fi; done
 }
 
 
