@@ -14,7 +14,7 @@ if [[ ! -f /usr/bin/chef-solo ]]; then
     msg "Installing chef"
     safe rpm -Uvh http://rbel.co/rbel6
     safe yum install -y ruby ruby-devel ruby-ri ruby-rdoc ruby-shadow \
-        gcc gcc-c++ automake autoconf make curl dmidecode
+        gcc gcc-c++ automake autoconf make curl dmidecode wget
     safe wget http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz
     safe tar zxf rubygems-1.6.2.tgz
     pushd rubygems-1.6.2 > /dev/null
