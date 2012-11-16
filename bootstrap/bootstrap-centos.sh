@@ -12,7 +12,11 @@ safe() { "$@" || err "cannot $@"; }
 
 if [[ ! -f /usr/bin/chef-solo ]]; then
     msg "Installing chef"
-    safe rpm -Uvh http://rbel.co/rbel6
+    
+    if [ $(rpm -qa | grep -c rbel6-release) -eq 0 ]; then
+        safe rpm -Uvh http://rbel.co/rbel6
+    fi
+
     safe yum install -y ruby ruby-devel ruby-ri ruby-rdoc ruby-shadow \
         gcc gcc-c++ automake autoconf make curl dmidecode wget
     safe wget http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz
