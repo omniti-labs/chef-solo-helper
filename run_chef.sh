@@ -189,7 +189,7 @@ update_git() {
         pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
         if git rev-parse --verify -q origin/$CO_BRANCH; then
             local current_branch=`git symbolic-ref --short HEAD 2> /dev/null`
-            if [ $current_branch -ne $CO_BRANCH ]; then
+            if [[ $current_branch  $CO_BRANCH ]]; then
                 git branch -f $CO_BRANCH origin/$CO_BRANCH || error "Failed to create branch $CO_BRANCH"
             fi
         fi
@@ -288,7 +288,7 @@ update_combined_links() {
     done
 
     # Remove any leftover symlinks that don't link to anything anymore
-    find $COMBINED_DIR -type l | while read f; do if [ ! -e "$f" ]; then rm -f "$f"; fi; done
+    find $COMBINED_DIR -type l | while read f; do if [[ ! -e "$f" ]]; then rm -f "$f"; fi; done
 }
 
 
