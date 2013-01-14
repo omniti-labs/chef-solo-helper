@@ -56,6 +56,9 @@ export GIT_SSH="$BOOTSTRAP_PATH/git-ssh-wrapper.sh"
 echo "ssh -i $CHEF_ROOT/$KEY \"\$@\"" > $GIT_SSH
 chmod +x $GIT_SSH
 
+msg "Ensuring required packages are installed"
+pkg install git chef
+
 pushd $CHEF_ROOT > /dev/null
 if [[ -n $SCRIPTS_REPO ]]; then
     msg "Cloning scripts repository"
