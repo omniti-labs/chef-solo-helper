@@ -46,13 +46,15 @@ NODENAME=$(hostname)
 # Strip off any domain name from incorrectly set hostnames
 NODENAME=${NODENAME%%.*}
 
+THINGS_TO_COMBINE="nodes roles data_bags handlers"
+
 CHEF_ROOT="/var/chef-solo"
-# Which repositories to update with git
-REPOS="$CHEF_ROOT/scripts $CHEF_ROOT/config $CHEF_ROOT/common"
-# Path to node configs
-NODEPATH="$CHEF_ROOT/config/nodes"
+
+# Command to fetch checkout list
+FETCH_CHECKOUT_LIST_COMMAND="cat /var/chef-solo/checkout-list"
 
 # Use a custom wrapper for ssh with git
+# Controlled by two more env vars, RELY_ON_SSH_AGENT and GIT_SSH_IDENTITY
 export GIT_SSH=$CHEF_ROOT/scripts/resources/git-ssh-wrapper.sh
 
 # Path to lockfile
@@ -99,6 +101,7 @@ usage() {
     echo "    -n         -- don't update using git before running chef-solo"
     echo "    -o         -- only run once"
     echo "    -j         -- Include random delay (splay) even when running once"
+    echo "    -K         -- if a killswitch file exists, ignore it"
     echo "    -i         -- override default interval ($INTERVAL)"
     echo "    -s         -- override default splay ($SPLAY)"
     echo "    -l         -- override the default logfile ($LOGFILE)"
@@ -126,13 +129,178 @@ unlock() {
     trap - INT TERM EXIT
 }
 
-while getopts ":hdjnoiu:s:l:v" opt; do
+
+# Uses $FETCH_CHECKOUT_LIST_COMMAND (from config.sh) to read the checkout list into array $CHECKOUTS
+read_checkout_list() {
+    log "Reading checkout list via '$FETCH_CHECKOUT_LIST_COMMAND'"
+    CHECKOUTS=(`$FETCH_CHECKOUT_LIST_COMMAND`)
+    log "Found ${#CHECKOUTS[@]} checkouts to perform"
+}
+
+# Checks out or clones, etc
+update_checkout() {
+    split_checkout_line $1
+    pushd $CHECKOUTS_DIR > /dev/null
+    if [[ $CO_VCS = 'git' ]]; then
+        if [[ -n $VERBOSE ]]; then
+            update_git | tee -a $LOGFILE
+        else
+            update_git >> $LOGFILE
+        fi
+    fi
+    if [[ $CO_VCS = 'svn' ]]; then
+        update_svn
+    fi
+
+    echo $CO_COOKBOOK_DIR >> $CHEF_ROOT/.cookbook-order
+    popd > /dev/null
+}
+
+update_git() {
+    setup_git_creds
+
+    if [[ -d $CHECKOUTS_DIR/$CO_DIR ]]; then
+        # pull/update
+        log "Pulling checkout $CO_DIR"
+        pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
+        git remote set-url origin $CO_REPO
+        git fetch origin 2>&1 || error "Failed git fetch"
+        local local_branch=$(git rev-parse --verify --symbolic-full-name $CO_BRANCH 2> /dev/null)
+        # no branch or bad commit
+        if [[ $PIPESTATUS -ne 0 ]]; then
+            git rev-parse --verify -q --symbolic-full-name origin/$CO_BRANCH ||
+                error "Unable to find branch or commit $CO_BRANCH"
+            git checkout -b $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        # local branch already exists
+        elif [[ -n $local_branch ]]; then
+            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            git merge origin/$CO_BRANCH || error "Failed to merge origin/$CO_BRANCH"
+        else
+            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        fi
+
+        popd > /dev/null
+    else
+        # Clone
+        log "Pulling checkout $CO_DIR"
+        # assume verbose mode here
+        git clone --no-checkout $CO_REPO $CO_DIR 2>&1 | tee -a $LOGFILE
+        [[ $PIPESTATUS -eq 0 ]] || error "Failed git clone"
+        pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
+        if git rev-parse --verify -q origin/$CO_BRANCH; then
+            local current_branch=`git symbolic-ref --short HEAD 2> /dev/null`
+            if [ $current_branch -ne $CO_BRANCH ]; then
+                git branch -f $CO_BRANCH origin/$CO_BRANCH || error "Failed to create branch $CO_BRANCH"
+            fi
+        fi
+        git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        popd > /dev/null
+    fi
+}
+
+update_svn() {
+
+    if [[ -d $CHECKOUTS_DIR/$CO_DIR ]]; then
+        log "SVN updating $CO_DIR"
+        pushd $CHECKOUTS_DIR/$CO_DIR > /dev/null
+
+        if [[ -n $VERBOSE ]]; then 
+            # TODO svn switch for branch changes?
+            svn update --username $SVNUSER 2>&1 | tee -a $LOGFILE
+            [[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
+        else
+            # TODO svn switch for branch changes?
+            svn update --username $SVNUSER >> $LOGFILE 2>&1 || error "Failed svn up"
+        fi
+
+        popd > /dev/null
+    else
+        # TODO
+        error "No support for initial SVN checkout yet"
+    fi
+ 
+}
+
+
+# Given a CSV line from $CHECKOUTS, split it into the fields, and store in global variables named CO_*
+split_checkout_line() {
+    local INFO=(`echo "$1" | sed -e 's/,/ /g'`)
+    CO_VCS=${INFO[0]}
+    CO_REPO=${INFO[1]}
+    CO_DIR=${INFO[2]}
+    CO_BRANCH=${INFO[3]}
+    CO_CREDS=${INFO[4]}
+
+    CO_COOKBOOK_DIR=`echo $CO_DIR | cut -d'/' -f1`
+    CO_COOKBOOK_DIR="$CO_COOKBOOK_DIR/cookbooks"
+
+}
+
+
+# Examines CO_CREDS, and exports vars to control behavior of git-ssh-wrapper
+setup_git_creds() {
+    if [[ $CO_CREDS = 'AGENT' ]]; then
+        export RELY_ON_SSH_AGENT="yes"
+    else
+        unset RELY_ON_SSH_AGENT
+        if [[ $CO_CREDS = 'NONE' ]]; then
+            unset GIT_SSH_IDENTITY
+        else
+            export GIT_SSH_IDENTITY=$CHEF_ROOT/$CO_CREDS
+        fi
+    fi
+}
+
+clear_combined_links() {
+    for WHAT in $THINGS_TO_COMBINE; do
+        rm $COMBINED_DIR/$WHAT/* 2> /dev/null
+    done
+
+    # Reset cookbook order
+    echo -n > $CHEF_ROOT/.cookbook-order
+
+}
+
+
+update_combined_links() {
+    split_checkout_line $1
+    for WHAT in $THINGS_TO_COMBINE; do
+        if [[ -e $CHECKOUTS_DIR/$CO_DIR/$WHAT ]]; then
+            if [[ -n $VERBOSE ]]; then 
+                log "Re-linking combined $WHAT from $CO_DIR"
+            fi
+            pushd $COMBINED_DIR/$WHAT > /dev/null            
+            if [[ $WHAT == 'data_bags' ]]; then
+                # Need a second layer of dirs for databags
+                for DBAG in `ls $CHECKOUTS_DIR/$CO_DIR/$WHAT`; do 
+                    if [[ -d $CHECKOUTS_DIR/$CO_DIR/$WHAT/$DBAG ]]; then
+                        mkdir -p $DBAG
+                        pushd $DBAG > /dev/null
+                        ls $CHECKOUTS_DIR/$CO_DIR/$WHAT/$DBAG/*.{rb,json} 2> /dev/null | xargs -n 1 -I {} ln -sf {} . # Use -f so last one wins
+                        popd
+                    fi
+                done
+            else
+                ls $CHECKOUTS_DIR/$CO_DIR/$WHAT/*.{rb,json} 2> /dev/null | xargs -n 1 -I {} ln -sf {} . # Use -f so last one wins
+            fi
+            popd > /dev/null
+        fi
+    done
+
+    # Remove any leftover symlinks that don't link to anything anymore
+    find $COMBINED_DIR -type l | while read f; do if [ ! -e "$f" ]; then rm -f "$f"; fi; done
+}
+
+
+while getopts ":hdjKnoiu:s:l:v" opt; do
     case $opt in
         h)  usage
             ;;
         d)  DEBUG=1
             ;;
         j)  RUN_ONCE_SPLAY=1
+            ;;
+        K)  IGNORE_KILLSWITCH=1
             ;;
         n)  NO_GIT=1
             ;;
@@ -161,6 +329,29 @@ LOGDIR=$(dirname $LOGFILE)
 
 rotate_logs
 
+# Make sure the combined directories exist
+COMBINED_DIR=$CHEF_ROOT/combined
+mkdir -p $COMBINED_DIR
+for WHAT in $THINGS_TO_COMBINE; do 
+    mkdir -p $COMBINED_DIR/$WHAT
+done
+
+if [[ -z $NODEPATH ]]; then
+    NODEPATH=$COMBINED_DIR/nodes
+fi
+
+# Make sure the checkouts dir exist
+CHECKOUTS_DIR=$CHEF_ROOT/checkouts
+mkdir -p $CHECKOUTS_DIR
+
+# Check for killswitch and exit
+if [[ -z $IGNORE_KILLSWITCH ]]; then
+    if [[ -e $CHEF_ROOT/killswitch ]]; then
+        log "Killswitch file $CHEF_ROOT/killswitch exists - exiting immediately"
+        exit
+    fi
+fi
+
 # If we're running multiple times, then have an initial random delay
 if [[ -z $RUN_ONCE || -n $RUN_ONCE_SPLAY ]]; then
     DELAY=$((RANDOM % SPLAY))
@@ -172,42 +363,19 @@ while true; do
     if lock; then
         # Update repos
         if [[ -z $NO_GIT ]]; then
-            for r in $REPOS; do
-                if [[ -d $r ]]; then
-                    pushd $r > /dev/null
-                    if [[ -e .git ]]; then
-                        log "Updating git repository $r"
-                        if [[ -n $VERBOSE ]]; then
-                            git pull 2>&1 | tee -a $LOGFILE
-                            [[ $PIPESTATUS -eq 0 ]] || error "Failed git pull"
-                        else
-                            git pull >> $LOGFILE 2>&1 ||
-                            error "Failed git pull"
-                        fi
-                    fi
-                    if [[ -e .svn ]]; then
-                        log "Updating svn repository $r"
-                        if [[ -n $VERBOSE ]]; then
-                            svn up --username $SVNUSER | tee -a $LOGFILE
-                            [[ $PIPESTATUS -eq 0 ]] || error "Failed svn up"
-                        else
-                            svn up --username $SVNUSER >> $LOGFILE 2>&1 ||
-                            error "Failed svn up"
-                        fi
-                    fi
-                    popd > /dev/null
-                fi
+            clear_combined_links
+            read_checkout_list
+            for CHECKOUT in ${CHECKOUTS[@]}; do
+                update_checkout $CHECKOUT
+                update_combined_links $CHECKOUT
             done
         fi
-        log "Running chef-solo"
-        # Run chef-solo
+        
         DEBUGLOG=
-        [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
-        chef-solo -c solo.rb \
-            -j $NODEPATH/$NODENAME.json \
-            -N $NODENAME \
-            -L $LOGFILE \
-            $DEBUGLOG
+         [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
+        CMD="chef-solo -c solo.rb -j $NODEPATH/$NODENAME.json -N $NODENAME -L $LOGFILE $DEBUGLOG"
+        log "Running chef-solo as $CMD"
+        $CMD
         unlock
     fi
     # Quit if we're only running once

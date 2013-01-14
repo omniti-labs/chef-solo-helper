@@ -8,26 +8,27 @@ configuration.
 
 ### Git key
 
-Get the secret key for the account that has access to the git repository where
-you're storing the chef repository, and put it in /root/.ssh/id_rsa_chef:
+You may need to install SSH keys to the system; if using a bootstrap script, it may handle this for you.
 
-    sudo mkdir /root/.ssh
-    sudo chmod 700 /root/.ssh
-    sudo cp id_rsa_chef /root/.ssh/
-    sudo chmod 600 /root/.ssh/id_rsa_chef
+Keys are typically stored under /var/chef-solo, eg chef.key .  It must be readable only by root.
+
+You can also specify keys to use for specific repos using the checkout list.
 
 ### Repositories
 
-In general, there are 3 repositories for each chef installation:
+In general, there are N+1 repositories for each chef installation:
 
- * Scripts to run chef
- * A project specific repository (this is the main chef configuration)
- * A common/shared repository for cookbooks common to all installations
-
-All of these go under /var/chef-solo in the scripts, config and common
-directories respectively.
+ * Scripts to run chef (the + 1).  This is always present, and is checked out 
+   into /var/chef-solo/scripts .
+ * One or more checkouts, building up a set of cookbooks, roles, and node 
+   configuration data.  The list of checkouts is determined dynamically by 
+   executing a command in the config.sh file.  Each checkout is then delivered
+   into the /var/chef-solo/checkouts directory.  Each may have a cookbooks, 
+   nodes, roles, handlers, and data_bags directory.
 
 #### Chef scripts repository
+
+This step is normally performed by a bootstrapping script.
 
 Check out the scripts repository to `/var/chef-solo/scripts/`:
 
@@ -36,19 +37,66 @@ Check out the scripts repository to `/var/chef-solo/scripts/`:
     git clone src@src.omniti.com:~internal/chef/scripts
     sudo mv scripts /var/chef-solo/scripts
 
-#### Project specific repository
+#### List of Additional Checkouts/Repositories
 
-Check out the project specific chef repository to `/var/chef-solo/config/`:
+run_chef.sh will fetch a list of additional checkouts.  The list should be in CSV format with no spaces between fields.  Example:
 
-    git clone src@src.omniti.com:~systems/chef/myrepo
-    sudo mv myrepo /var/chef-solo/config
+   git,src@src.omniti.com:~internal/chef/systems,omniti-internal-systems,master,chef.key
+   git,src@src.omniti.com:~internal/chef/common,omniti-internal-common,multi-repo,chef.key
+   git,git@trac-il.omniti.net:myproject/support/chef,myproject-chef,master,AGENT
+   git,https://github.com/opscode-cookbooks/php.git,opscode-php/cookbooks/php,master,NONE
 
-### Common cookbooks repository
+The fields are: VCS,repo address, directory name, branch, credentials
+ * VCS may be either 'git' or 'svn'.
+ * repo address is the identifier of the repository from which to obtain the checkout.
+ * directory name is the path under /var/chef-solo/checkouts to clone/checkout into.  It may contain slashes.
+ * branch is the name of the git branch.  Leave blank for svn (use repo address for svn branching)
+ * credentials is the method to authenticate to the repo server.  NONE means use no authentication.  AGENT means to rely on a running ssh-agent to provide credentials.  All other values are taken to specify the location of a SSH private key, relative to /var/chef-solo, that should be used with a GIT_SSH wrapper.
 
-Check out the common chef repository to `/var/chef-solo/common/`:
+On each run, the checkout list will be re-fetched, and each checkout will be cloned/checked-out (if absent) or pulled/updated (if present).  No facility exists for deleting a checkout.
 
-    git clone src@src.omniti.com:~internal/chef/common
-    sudo mv common /var/chef-solo/common
+#### Cross-Linking Roles, Nodes, Etc
+
+Chef can use multiple cookbook directories, but only one roles, databags, and nodes directory.  To overcome this, run-chef maintains a 'combined' directory, with a 'combined/roles' directory containing links to EVERY role in the various checkouts.  
+
+Combined objects are linked in the order specified in the checkout list file.  In the event of naming collisions, the LATER entry wins.
+
+## Config File
+
+This step is normally performed by a bootstrapping script, which will usually copy in or create a pre-existing config.sh
+
+In /var/chef-solo/scripts/config.sh , add any settings you'd like to override.
+
+#### FETCH_CHECKOUT_LIST_COMMAND
+
+Default: "cat /var/chef-solo/checkout-list"
+
+This command will be used to fetch the checkout list.  One simple example might be:
+
+ FETCH_CHECKOUT_LIST_COMMAND="cat /var/chef-solo/checkout-list"
+ FETCH_CHECKOUT_LIST_COMMAND="wget -O - -q http://trac.omniti.net/checkout-lists/myproject "
+
+If the environment was bootstrapped, the bootstrapper may have delivered the checkout-list file.
+
+#### INTERVAL
+
+Default: 1800
+If you run_chef.sh as a daemon (without the -o), number of seconds to sleep between runs.
+
+#### CHEF_ROOT
+
+Default: "/var/chef-solo"
+Location on the filesystem for the various bits of this installation.
+
+#### LOGFILE
+
+Default:  /var/log/chef/solo.log
+Location of the logfile.
+
+#### SPLAY
+
+Default: 120
+When running in daemon mode, wait a random number of seconds up to this value, to offset the run interval.
 
 ## Running chef
 

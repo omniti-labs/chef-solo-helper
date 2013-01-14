@@ -1,11 +1,15 @@
 #!/bin/bash
-# Bootstrap an ec2 system remotely via ssh
+# Bootstrap a system remotely via ssh
 
 CONFIG_FILE=$(dirname $0)/config.sh
-while getopts ":c:" opt; do
+SSH_PORT=22
+while getopts ":c:p:" opt; do
     case $opt in
         c)
             CONFIG_FILE=$OPTARG
+            ;;
+        p)
+            SSH_PORT=$OPTARG
             ;;
         *)
             echo "Invalid option -- '$OPTARG'"
@@ -31,21 +35,31 @@ safe() { "$@" || err "cannot $@"; }
 SSH_OPTS=
 [[ -n $SSH_KEY ]] && SSH_OPTS="-i $SSH_KEY"
 
+SCP_OPTS="$SSH_OPTS -P $SSH_PORT"
+SSH_OPTS="$SSH_OPTS -p $SSH_PORT"
+
 msg "Making bootstrap dir on the server"
 safe ssh $SSH_OPTS $USERNAME@$HOST mkdir -p $BOOTSTRAP_PATH
 
 msg "Copying key"
-safe scp $SSH_OPTS $KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
+safe scp $SCP_OPTS $KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 msg "Copying bootstrap script"
-safe scp $SSH_OPTS $BOOTSTRAP_SCRIPT $USERNAME@$HOST:$BOOTSTRAP_PATH
+safe scp $SCP_OPTS $BOOTSTRAP_SCRIPT $USERNAME@$HOST:$BOOTSTRAP_PATH
 
-msg "Copying configuration"
-safe scp $SSH_OPTS config.sh $USERNAME@$HOST:$BOOTSTRAP_PATH
+msg "Copying configuration (renaming as config.sh)"
+safe scp $SCP_OPTS $CONFIG_FILE $USERNAME@$HOST:$BOOTSTRAP_PATH/config.sh
 
 if [[ -n $NODENAME ]]; then
     msg "Setting hostname on the server"
     safe ssh $SSH_OPTS -t $USERNAME@$HOST sudo hostname $NODENAME
+fi
+
+if [[ -n $SCHLEP_FILES ]]; then
+    for FILE in "$SCHLEP_FILES"; do 
+        msg "Uploading schlep file $FILE"
+        safe scp $SCP_OPTS $FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
+    done
 fi
 
 msg "Running bootstrap script on $HOST as root"
