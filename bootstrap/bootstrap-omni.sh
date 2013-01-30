@@ -57,6 +57,8 @@ echo "ssh -i $CHEF_ROOT/$KEY \"\$@\"" > $GIT_SSH
 chmod +x $GIT_SSH
 
 msg "Ensuring required packages are installed"
+pkg publisher ms.omniti.com || \
+    pkg set-publisher -g http://pkg-internal.omniti.com/omniti-ms ms.omniti.com
 pkg install git chef
 
 pushd $CHEF_ROOT > /dev/null
