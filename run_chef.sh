@@ -170,13 +170,13 @@ update_git() {
         if [[ $PIPESTATUS -ne 0 ]]; then
             git rev-parse --verify -q --symbolic-full-name origin/$CO_BRANCH ||
                 error "Unable to find branch or commit $CO_BRANCH"
-            git checkout -b $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            git checkout -q -b $CO_BRANCH origin/$CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         # local branch already exists
         elif [[ -n $local_branch ]]; then
-            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            git checkout -q $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
             git merge origin/$CO_BRANCH || error "Failed to merge origin/$CO_BRANCH"
         else
-            git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+            git checkout -q $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         fi
 
         popd > /dev/null
@@ -193,7 +193,7 @@ update_git() {
                 git branch -f $CO_BRANCH origin/$CO_BRANCH || error "Failed to create branch $CO_BRANCH"
             fi
         fi
-        git checkout $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
+        git checkout -q $CO_BRANCH || error "Failed to checkout $CO_BRANCH"
         popd > /dev/null
     fi
 }
@@ -269,7 +269,7 @@ update_combined_links() {
             if [[ -n $VERBOSE ]]; then 
                 log "Re-linking combined $WHAT from $CO_DIR"
             fi
-            pushd $COMBINED_DIR/$WHAT > /dev/null            
+            pushd $COMBINED_DIR/$WHAT > /dev/null
             if [[ $WHAT == 'data_bags' ]]; then
                 # Need a second layer of dirs for databags
                 for DBAG in `ls $CHECKOUTS_DIR/$CO_DIR/$WHAT`; do 
@@ -277,7 +277,7 @@ update_combined_links() {
                         mkdir -p $DBAG
                         pushd $DBAG > /dev/null
                         ls $CHECKOUTS_DIR/$CO_DIR/$WHAT/$DBAG/*.{rb,json} 2> /dev/null | xargs -n 1 -I {} ln -sf {} . # Use -f so last one wins
-                        popd
+                        popd > /dev/null
                     fi
                 done
             else
