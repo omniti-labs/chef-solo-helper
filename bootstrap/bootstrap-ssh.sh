@@ -1,7 +1,7 @@
 #!/bin/bash
 # Bootstrap a system remotely via ssh
-
-CONFIG_FILE=$(dirname $0)/config.sh
+MYDIR=$(dirname $0) # Directory where the script is
+CONFIG_FILE=$MYDIR/config.sh
 SSH_PORT=22
 while getopts ":c:p:" opt; do
     case $opt in
@@ -20,6 +20,8 @@ done
 shift $(($OPTIND-1))
 
 . $CONFIG_FILE
+
+CONFIG_FILE_DIR=$(dirname $CONFIG_FILE)
 
 HOST=$1
 # Allow specifying the hostname on the command line - this is used to
@@ -42,10 +44,11 @@ msg "Making bootstrap dir on the server"
 safe ssh $SSH_OPTS $USERNAME@$HOST mkdir -p $BOOTSTRAP_PATH
 
 msg "Copying key"
-safe scp $SCP_OPTS $KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
+safe scp $SCP_OPTS $CONFIG_FILE_DIR/$KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 msg "Copying bootstrap script"
-safe scp $SCP_OPTS $BOOTSTRAP_SCRIPT $USERNAME@$HOST:$BOOTSTRAP_PATH
+safe scp $SCP_OPTS $MYDIR/local_scripts/$BOOTSTRAP_SCRIPT \
+    $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 msg "Copying configuration (renaming as config.sh)"
 safe scp $SCP_OPTS $CONFIG_FILE $USERNAME@$HOST:$BOOTSTRAP_PATH/config.sh
@@ -58,7 +61,8 @@ fi
 if [[ -n $SCHLEP_FILES ]]; then
     for FILE in "$SCHLEP_FILES"; do 
         msg "Uploading schlep file $FILE"
-        safe scp $SCP_OPTS $FILE $USERNAME@$HOST:$BOOTSTRAP_PATH
+        safe scp $SCP_OPTS $CONFIG_FILE_DIR/$FILE \
+            $USERNAME@$HOST:$BOOTSTRAP_PATH
     done
 fi
 

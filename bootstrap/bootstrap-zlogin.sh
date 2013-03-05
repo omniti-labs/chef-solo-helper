@@ -1,7 +1,7 @@
 #!/bin/bash
 # Bootstrap a non-global zone from the global zone
-
-CONFIG_FILE=$(dirname $0)/config.sh
+MYDIR=$(dirname $0)
+CONFIG_FILE=$MYDIR/config.sh
 
 while getopts ":c:p:" opt; do
     case $opt in
@@ -18,6 +18,8 @@ shift $(($OPTIND-1))
 
 . $CONFIG_FILE
 
+CONFIG_FILE_DIR=$(dirname $CONFIG_FILE)
+
 ZONE=$1
 # Allow specifying the hostname on the command line - this is used to
 # temporarily set the hostname on the system so that chef knows what node name
@@ -33,13 +35,13 @@ err() { msg $@; exit 100; }
 safe() { "$@" || err "cannot $@"; }
 
 msg "Making bootstrap dir on the zone"
-safe mkdir $ZONEROOT/$BOOTSTRAP_PATH
+safe mkdir -p $ZONEROOT/$BOOTSTRAP_PATH
 
 msg "Copying key"
-safe cp $KEY $ZONEROOT/$BOOTSTRAP_PATH
+safe cp $CONFIG_FILE_DIR/$KEY $ZONEROOT/$BOOTSTRAP_PATH
 
 msg "Copying bootstrap script"
-safe cp $BOOTSTRAP_SCRIPT $ZONEROOT/$BOOTSTRAP_PATH
+safe cp $MYDIR/local_scripts/$BOOTSTRAP_SCRIPT $ZONEROOT/$BOOTSTRAP_PATH
 
 msg "Copying configuration (renaming as config.sh)"
 safe cp $CONFIG_FILE $ZONEROOT/$BOOTSTRAP_PATH/config.sh
@@ -52,7 +54,7 @@ fi
 if [[ -n $SCHLEP_FILES ]]; then
     for FILE in "$SCHLEP_FILES"; do 
         msg "Uploading schlep file $FILE"
-        cp $FILE $ZONEROOT/$BOOTSTRAP_PATH
+        cp $CONFIG_FILE_DIR/$FILE $ZONEROOT/$BOOTSTRAP_PATH
     done
 fi
 
