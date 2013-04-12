@@ -1,17 +1,19 @@
 #!/bin/bash
-# Bootstrap script for centos
+# Ubuntu bootstrap script
 . $(dirname $0)/bootstrap-common.sh
+
+. /etc/lsb-release
 
 install_chef() {
     if [[ ! -f /usr/bin/chef-solo ]]; then
         msg "Installing chef"
-
-        if [ $(rpm -qa | grep -c rbel6-release) -eq 0 ]; then
-            safe rpm -Uvh http://rbel.co/rbel6
+        safe apt-get update
+        if [[ $DISTRIB_RELEASE == "12.04" ]]; then
+            safe apt-get install -y ruby ruby1.8-dev build-essential wget
+        else
+            safe apt-get install -y ruby ruby1.8-dev build-essential wget \
+                libruby-extras libruby1.8-extras
         fi
-
-        safe yum install -y ruby ruby-devel ruby-ri ruby-rdoc ruby-shadow \
-            gcc gcc-c++ automake autoconf make curl dmidecode wget
         safe wget http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz
         safe tar zxf rubygems-1.6.2.tgz
         pushd rubygems-1.6.2 > /dev/null
@@ -27,8 +29,9 @@ install_chef() {
 install_git() {
     if [[ ! -f /usr/bin/git ]]; then
         msg "Installing git"
-        safe yum install git
+        safe apt-get install -y git-core
     fi
 }
 
-do_bootstrap
+# Actually do the boostrap
+do_boostrap
