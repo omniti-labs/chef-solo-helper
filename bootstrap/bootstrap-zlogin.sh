@@ -40,7 +40,8 @@ safe mkdir -p $ZONEROOT/$BOOTSTRAP_PATH
 msg "Copying key"
 safe cp $CONFIG_FILE_DIR/$KEY $ZONEROOT/$BOOTSTRAP_PATH
 
-msg "Copying bootstrap script"
+msg "Copying bootstrap script(s)"
+safe cp $MYDIR/local_scripts/bootstrap_common.sh $ZONEROOT/$BOOTSTRAP_PATH
 safe cp $MYDIR/local_scripts/$BOOTSTRAP_SCRIPT $ZONEROOT/$BOOTSTRAP_PATH
 
 msg "Copying configuration (renaming as config.sh)"

@@ -47,6 +47,8 @@ msg "Copying key"
 safe scp $SCP_OPTS $CONFIG_FILE_DIR/$KEY $USERNAME@$HOST:$BOOTSTRAP_PATH
 
 msg "Copying bootstrap script"
+safe scp $SCP_OPTS $MYDIR/local_scripts/bootstrap_common.sh \
+    $USERNAME@$HOST:$BOOTSTRAP_PATH
 safe scp $SCP_OPTS $MYDIR/local_scripts/$BOOTSTRAP_SCRIPT \
     $USERNAME@$HOST:$BOOTSTRAP_PATH
 
