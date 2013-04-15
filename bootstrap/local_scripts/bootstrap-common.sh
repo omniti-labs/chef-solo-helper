@@ -74,7 +74,7 @@ populate_known_hosts() {
         safe chmod 600 /root/.ssh/known_hosts
         for HOST in "$SSH_KNOWN_HOSTS"; do
             grep "$HOST" /root/.ssh/known_hosts > /dev/null ||
-                safe ssh-keyscan $HOST >> /root/.ssh/known_hosts
+                safe ssh-keyscan -t rsa,dsa $HOST >> /root/.ssh/known_hosts
         done
     fi
 }
