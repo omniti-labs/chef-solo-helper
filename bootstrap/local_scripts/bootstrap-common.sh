@@ -66,7 +66,7 @@ populate_known_hosts() {
     fi
 
     # If we need to, automatically populate the known hosts file
-    if [[ -n $GIT_HOST ]]; then
+    if [[ -n $SSH_KNOWN_HOSTS ]]; then
         msg "Populating known hosts file"
         safe mkdir -p /root/.ssh/
         safe chmod 700 /root/.ssh/
