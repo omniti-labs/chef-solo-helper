@@ -33,5 +33,5 @@ install_git() {
     fi
 }
 
-# Actually do the boostrap
-do_boostrap
+# Actually do the bootstrap
+do_bootstrap
