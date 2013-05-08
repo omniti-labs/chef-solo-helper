@@ -8,21 +8,14 @@ install_chef() {
     if [[ ! -f /usr/bin/chef-solo ]]; then
         msg "Installing chef"
         safe apt-get update
-        if [[ $DISTRIB_RELEASE == "12.04" ]]; then
-            safe apt-get install -y ruby ruby1.8-dev build-essential wget
-        else
-            safe apt-get install -y ruby ruby1.8-dev build-essential wget \
-                libruby-extras libruby1.8-extras
-        fi
-        safe wget http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz
-        safe tar zxf rubygems-1.6.2.tgz
-        pushd rubygems-1.6.2 > /dev/null
-        safe ruby setup.rb --no-format-executable
-        popd > /dev/null
-
+        safe apt-get install -y ruby1.9.3
         safe gem update --no-rdoc --no-ri
-        safe gem install ohai --no-rdoc --no-ri
-        safe gem install chef --no-rdoc --no-ri
+        if [[ -n $CHEF_VERSION ]]; then
+            # Allow specifying the chef version
+            safe gem install --version "$CHEF_VERSION" chef --no-rdoc --no-ri
+        else
+            safe gem install chef --no-rdoc --no-ri
+        fi
     fi
 }
 
