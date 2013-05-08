@@ -8,8 +8,7 @@ install_chef() {
     if [[ ! -f /usr/bin/chef-solo ]]; then
         msg "Installing chef"
         safe apt-get update
-        safe apt-get install -y ruby1.9.3
-        safe gem update --no-rdoc --no-ri
+        safe apt-get install -y ruby1.9.3 build-essential
         if [[ -n $CHEF_VERSION ]]; then
             # Allow specifying the chef version
             safe gem install --version "$CHEF_VERSION" chef --no-rdoc --no-ri
