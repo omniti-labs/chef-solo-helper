@@ -1,9 +1,21 @@
 #!/bin/bash
 # Bootstrap a system remotely via ssh
+usage() {
+    echo "Usage: $0 [OPTIONS] HOSTNAME [NODENAME]"
+    echo
+    echo "Options:"
+    echo "  -c configfile -- alternate bootstrap config file (default: config.sh)"
+    echo "  -p ssh_port   -- alternate ssh port to connect to (default: 22)"
+    echo "  -o ssh_opts   -- additional options to pass to ssh/scp commands"
+    echo "  -u username   -- override the ssh username"
+}
+
 MYDIR=$(dirname $0) # Directory where the script is
 CONFIG_FILE=$MYDIR/config.sh
 SSH_PORT=22
-while getopts ":c:p:" opt; do
+SSH_OPTS=
+SSH_USER_OPT=
+while getopts ":c:p:o:u:" opt; do
     case $opt in
         c)
             CONFIG_FILE=$OPTARG
@@ -11,8 +23,15 @@ while getopts ":c:p:" opt; do
         p)
             SSH_PORT=$OPTARG
             ;;
+        o)
+            SSH_OPTS=$OPTARG
+            ;;
+        u)
+            SSH_USER_OPT=$OPTARG
+            ;;
         *)
             echo "Invalid option -- '$OPTARG'"
+            usage
             exit 1
             ;;
     esac
@@ -20,11 +39,16 @@ done
 shift $(($OPTIND-1))
 
 if [[ -z $1 ]]; then
-    echo "Usage: $0 [-c configfile] hostname [nodename]"
+    usage
     exit 1
 fi
 
 . $CONFIG_FILE
+
+# Override username if provided on the command line
+if [[ -n $SSH_USER_OPT ]]; then
+    USERNAME=$SSH_USER_OPT
+fi
 
 CONFIG_FILE_DIR=$(dirname $CONFIG_FILE)
 
@@ -39,11 +63,13 @@ msg() { echo " * $@"; }
 err() { msg $@; exit 100; }
 safe() { "$@" || err "cannot $@"; }
 
-SSH_OPTS=
-[[ -n $SSH_KEY ]] && SSH_OPTS="-i $SSH_KEY"
+[[ -n $SSH_KEY ]] && SSH_OPTS="$SSH_OPTS -i $SSH_KEY"
 
-SCP_OPTS="$SSH_OPTS -P $SSH_PORT"
-SSH_OPTS="$SSH_OPTS -p $SSH_PORT"
+SCP_OPTS=$SSH_OPTS
+if [[ $SSH_PORT != 22 ]]; then
+    SCP_OPTS="$SCP_OPTS -P $SSH_PORT"
+    SSH_OPTS="$SSH_OPTS -p $SSH_PORT"
+fi
 
 msg "Making bootstrap dir on the server"
 safe ssh $SSH_OPTS $USERNAME@$HOST mkdir -p $BOOTSTRAP_PATH
