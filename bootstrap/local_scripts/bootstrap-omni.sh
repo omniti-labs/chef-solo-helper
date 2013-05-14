@@ -7,7 +7,7 @@ install_packages() {
     pkg publisher ms.omniti.com || \
         pkg set-publisher -g http://pkg-internal.omniti.com/omniti-ms \
         ms.omniti.com
-    pkg install git chef
+    pkg install developer/versioning/git chef
 }
 
 additional_tasks() {
