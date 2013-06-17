@@ -371,10 +371,22 @@ while true; do
                 update_combined_links $CHECKOUT
             done
         fi
-        
+
         DEBUGLOG=
-         [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
-        CMD="chef-solo -c solo.rb -j $NODEPATH/$NODENAME.json -N $NODENAME -L $LOGFILE $DEBUGLOG"
+        [[ -n $DEBUG ]] && DEBUGLOG="-l debug"
+
+        # Choose between json for a node config or directly hitting a node
+        # specific role. This allows you to have a repository without any node
+        # files, and simply have roles called node-foo.
+        if [[ -f $NODEPATH/$NODENAME.json ]]; then
+            # We have a json file, use it
+            NODEOPT="-j $NODEPATH/$NODENAME.json"
+        else
+            # Set run list to a node specific role
+            NODEOPT="-o role[node-$NODENAME]"
+        fi
+
+        CMD="chef-solo -c solo.rb $NODEOPT -N $NODENAME -L $LOGFILE $DEBUGLOG"
         log "Running chef-solo as $CMD"
         $CMD
         unlock
