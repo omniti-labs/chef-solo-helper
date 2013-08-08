@@ -1,6 +1,6 @@
 #!/bin/bash
 ##############################################################################
-# Copyright (c) 2011, OmniTI Computer Consulting, Inc.
+# Copyright (c) 2013, OmniTI Computer Consulting, Inc.
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,6 +39,7 @@
 MYDIR=$(dirname $BASH_SOURCE[0])
 cd $MYDIR
 
+PATH="/opt/omni/bin:$PATH"
 INTERVAL=1800
 SPLAY=120 # Random interval to inititally sleep to stagger chef runs
 LOGFILE=/var/log/chef/solo.log
