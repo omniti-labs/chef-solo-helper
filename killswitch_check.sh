@@ -20,7 +20,9 @@ $KSINFO
 EOF
 
     if [ -x /usr/lib/sendmail ]; then
-       /usr/lib/sendmail -oi $EMAIL < $TMPFILE
+        /usr/lib/sendmail -oi $EMAIL < $TMPFILE
+    elif [ -x /usr/sbin/sendmail ]; then
+        /usr/sbin/sendmail -oi $EMAIL < $TMPFILE
     fi
 
     rm $TMPFILE
