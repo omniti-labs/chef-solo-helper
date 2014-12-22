@@ -5,9 +5,9 @@
 
 EMAIL=$1
 HOST=`hostname`
-KSFILE="/var/chef-solo/scripts/killswitch"
+KSFILE="/var/chef-solo/killswitch"
 if [ -f $KSFILE ]; then
-    KSINFO=`ls -l /var/chef-solo/scripts/killswitch`
+    KSINFO=`ls -l /var/chef-solo/killswitch`
     TMPFILE=`mktemp /tmp/ksXXXX`
 
 cat > $TMPFILE <<EOF
