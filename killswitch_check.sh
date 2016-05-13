@@ -9,6 +9,7 @@ KSFILE="/var/chef-solo/killswitch"
 if [ -f $KSFILE ]; then
     KSINFO=`ls -l /var/chef-solo/killswitch`
     TMPFILE=`mktemp /tmp/ksXXXX`
+    KSTEXT=`cat /var/chef-solo/killswitch`
 
 cat > $TMPFILE <<EOF
 Subject: Chef disabled
@@ -17,6 +18,8 @@ This is an alert that someone has created a killswitch and chef will be disabled
 
 Host: $HOST
 $KSINFO
+
+$KSTEXT
 EOF
 
     if [ -x /usr/lib/sendmail ]; then
