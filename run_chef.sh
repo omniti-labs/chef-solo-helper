@@ -113,7 +113,7 @@ usage() {
 
 lock() {
     if ( set -o noclobber; echo "$$" > $LOCKFILE ) 2>/dev/null; then
-        trap "rm -f $LOCKFILE; exit $?" INT TERM
+        trap "rm -f $LOCKFILE; exit $?" INT TERM EXIT
         [[ -n $VERBOSE ]] && echo "Aquired lock"
         return 0
     fi
@@ -127,7 +127,7 @@ lock() {
 unlock() {
     [[ -n $VERBOSE ]] && echo "Releasing lock"
     rm -f $LOCKFILE
-    trap - INT TERM
+    trap - INT TERM EXIT
 }
 
 
